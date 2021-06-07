@@ -14,7 +14,11 @@ public class ASCIIBCD implements ShortcutField {
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public ASCIIBCD(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+    public static ASCIIBCD create(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+        return new ASCIIBCD(lengthType, maximumLength, contentType, contentPad);
+    }
+
+    private ASCIIBCD(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
         this.lengthType = lengthType;
         this.maximumLength = maximumLength;
         this.contentPad = contentPad;

@@ -1,9 +1,6 @@
 package ir.saeiddrv.iso8583.message.fields.shortcuts;
 
-import ir.saeiddrv.iso8583.message.fields.ContentPad;
-import ir.saeiddrv.iso8583.message.fields.ContentType;
-import ir.saeiddrv.iso8583.message.fields.Field;
-import ir.saeiddrv.iso8583.message.fields.SingleField;
+import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BinaryContentInterpreter;
 
@@ -13,7 +10,11 @@ public class BINARY implements ShortcutField {
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public BINARY(int lengthOfBytes) {
+    public static BINARY create(int lengthOfBytes) {
+        return new BINARY(lengthOfBytes);
+    }
+
+    private BINARY(int lengthOfBytes) {
         this.lengthOfBytes = lengthOfBytes;
     }
 

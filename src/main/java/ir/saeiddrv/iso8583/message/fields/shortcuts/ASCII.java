@@ -14,7 +14,11 @@ public class ASCII implements ShortcutField {
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public ASCII(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+    public static ASCII create(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+        return new ASCII(lengthType, maximumLength, contentType, contentPad);
+    }
+
+    private ASCII(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
         this.lengthType = lengthType;
         this.maximumLength = maximumLength;
         this.contentPad = contentPad;

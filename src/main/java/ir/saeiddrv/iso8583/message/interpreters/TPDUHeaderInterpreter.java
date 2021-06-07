@@ -46,7 +46,7 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
         sourceAddress = PadUtils.padLeft(sourceAddress, 4, '0');
         destinationAddress = PadUtils.padLeft(destinationAddress, 4, '0');
 
-        return new TPDUHeaderInterpreter(TypeUtils.hexToByte(protocolID),
+        return new TPDUHeaderInterpreter(TypeUtils.hexStringToByte(protocolID),
                 TypeUtils.hexStringToByteArray(sourceAddress),
                 TypeUtils.hexStringToByteArray(destinationAddress));
     }
@@ -66,9 +66,10 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
         sourceAddress = PadUtils.padLeft(sourceAddress, 4, '0');
         destinationAddress = PadUtils.padLeft(destinationAddress, 4, '0');
 
-        return new TPDUHeaderInterpreter(TypeUtils.decimalToBCD(protocolID)[0],
-                TypeUtils.decimalToBCD(sourceAddress),
-                TypeUtils.decimalToBCD(destinationAddress));
+        return new TPDUHeaderInterpreter(
+                TypeUtils.stringToBCDBytes(protocolID)[0],
+                TypeUtils.stringToBCDBytes(sourceAddress),
+                TypeUtils.stringToBCDBytes(destinationAddress));
     }
 
     @Override

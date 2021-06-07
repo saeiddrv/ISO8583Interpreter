@@ -71,7 +71,7 @@ public class ISOMessageBuilder {
     public ISOMessageBuilder setMTI(String mtiLiteral,
                                     MTIInterpreter interpreter) throws ISOMessageException {
         if (Validator.mti(mtiLiteral)) {
-            int[] mtiArray = TypeUtils.numberLiteralToIntArray(mtiLiteral);
+            int[] mtiArray = TypeUtils.numberStringToIntArray(mtiLiteral);
             message.setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3],
                     Objects.requireNonNull(interpreter, "The 'MTI Interpreter' cannot be set to null"))
             );

@@ -88,8 +88,8 @@ public class SingleField implements Field {
         content.setValue(value);
     }
 
-    public void setValue(String value, Charset charset) throws ISOMessageException {
-        content.setValueFromString(value, charset);
+    public void setValue(String value) {
+        content.setValue(value);
     }
 
     @Override

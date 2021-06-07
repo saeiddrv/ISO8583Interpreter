@@ -1,6 +1,5 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
-import ir.saeiddrv.iso8583.message.fields.ContentType;
 import ir.saeiddrv.iso8583.message.fields.ContentValue;
 import ir.saeiddrv.iso8583.message.ISOMessageException;
 import ir.saeiddrv.iso8583.message.fields.LengthValue;
@@ -26,6 +25,6 @@ public class BCDContentInterpreter implements ContentInterpreter {
             content.doPad(contentLength + 1);
         }
 
-        return TypeUtils.bytesToBCD(content.getValue());
+        return TypeUtils.byteArrayToBCD(content.getValue());
     }
 }

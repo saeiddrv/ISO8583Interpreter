@@ -204,7 +204,7 @@ public class ISOMessage {
 
     public void setValue(int fieldNumber, String value) throws ISOMessageException {
         if (isValueOK(fieldNumber, value)) {
-            ((SingleField) fields.get(fieldNumber)).setValue(value, charset);
+            ((SingleField) fields.get(fieldNumber)).setValue(value);
         }
     }
 

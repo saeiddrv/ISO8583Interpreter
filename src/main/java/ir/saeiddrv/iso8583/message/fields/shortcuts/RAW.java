@@ -9,9 +9,11 @@ public class RAW implements ShortcutField {
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public RAW() {
-
+    public static RAW create() {
+        return new RAW();
     }
+
+    private RAW() {}
 
     @Override
     public ShortcutField setDescription(String description) {

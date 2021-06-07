@@ -36,7 +36,7 @@ public class ContentValue {
 
     public void doPad(int maximumLength) {
         if (hasPadding())
-            this.value = pad.doPad(value, type, maximumLength);
+            this.value = pad.doPad(value, maximumLength);
     }
 
     @Override

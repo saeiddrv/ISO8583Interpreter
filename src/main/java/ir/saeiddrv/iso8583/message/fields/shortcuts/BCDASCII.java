@@ -14,7 +14,11 @@ public class BCDASCII implements ShortcutField {
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public BCDASCII(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+    public static BCDASCII create(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+        return new BCDASCII(lengthType, maximumLength, contentType, contentPad);
+    }
+
+    private BCDASCII(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
         this.lengthType = lengthType;
         this.maximumLength = maximumLength;
         this.contentPad = contentPad;
