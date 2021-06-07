@@ -23,7 +23,8 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
 
             if (lengthBytesCount > count)
                 throw new ISOMessageException("The length count of the generated message " +
-                        "(%s) is greater than the specified length (%s).", messageBytesLength, count);
+                        "(%s: %s bytes in HEX) is greater than the specified length (%s).",
+                        messageBytesLength, lengthBytesCount, count);
 
             byte[] pad = (count > lengthBytesCount) ? new byte[count - lengthBytesCount] : new byte[0];
 
