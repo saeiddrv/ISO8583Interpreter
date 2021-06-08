@@ -8,67 +8,50 @@ import java.nio.charset.Charset;
 public class Content {
 
     private final ContentInterpreter interpreter;
-    private final ContentValue value;
+    private final ContentPad pad;
+    private byte[] value = new byte[]{0};
 
-    Content(ContentInterpreter interpreter, ContentPad contentPad, ContentType contentType) {
+    Content(ContentInterpreter interpreter, ContentPad contentPad) {
         this.interpreter = interpreter;
-        this.value = new ContentValue(contentType, contentPad);
+        this.pad = contentPad;
     }
 
-    ContentInterpreter getInterpreter() {
-        return interpreter;
+    byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOMessageException {
+        if (hasInterpreter())
+            return interpreter.pack(filedNumber, length, value, pad, charset);
+        else
+            return new byte[0];
     }
 
-    public ContentValue getValue() {
+    public byte[] getValue() {
         return value;
     }
 
-    public ContentType getType() {
-        return value.getType();
-    }
-
-    public boolean isRAW() {
-        return getType() == ContentType.RAW;
-    }
-
-    public int getLength() {
-        return value.getValue().length;
+    public String getValueAsString() {
+        if (hasInterpreter()) return interpreter.transfer(getValue());
+        return TypeUtils.byteArrayToString(getValue());
     }
 
     public void setValue(byte[] value) {
-        this.value.setValue(value);
+        this.value = value;
     }
 
     public void setValue(String value) {
-        setValue(TypeUtils.stringToByteArray(value));
-    }
-
-    public String getValueAsString() {
-        return TypeUtils.byteArrayToString(getValue().getValue());
-    }
-
-    public boolean hasPadding() {
-        return value.hasPadding();
+        if (hasInterpreter()) setValue(interpreter.transfer(value));
+        else setValue(TypeUtils.stringToByteArray(value));
     }
 
     public void doPad(int maximumLength) {
-        if (hasPadding())
-            value.doPad(maximumLength);
+        value = pad.doPad(value, maximumLength);
     }
 
     public boolean hasInterpreter() {
         return interpreter != null;
     }
 
-    byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOMessageException {
-        if (hasInterpreter())
-            return interpreter.pack(filedNumber, length, value, charset);
-        else
-            return new byte[0];
-    }
-
     @Override
     public String toString() {
-        return String.format("@Content[value: %s, interpreter: %s]", value, interpreter.getName());
+        return String.format("@Content[value: %s, pad: %s, interpreter: %s]",
+                getValueAsString(), pad, interpreter.getName());
     }
 }

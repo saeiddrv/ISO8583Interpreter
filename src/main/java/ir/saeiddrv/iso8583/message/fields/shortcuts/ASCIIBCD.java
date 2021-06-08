@@ -9,20 +9,22 @@ public class ASCIIBCD implements ShortcutField {
 
     private final LengthType lengthType;
     private final int maximumLength;
-    private final ContentType contentType;
     private final ContentPad contentPad;
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public static ASCIIBCD create(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
-        return new ASCIIBCD(lengthType, maximumLength, contentType, contentPad);
+    public static ASCIIBCD create(LengthType lengthType, int maximumLength) {
+        return new ASCIIBCD(lengthType, maximumLength, ContentPad.NO_PADDING);
     }
 
-    private ASCIIBCD(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+    public static ASCIIBCD create(LengthType lengthType, int maximumLength, ContentPad contentPad) {
+        return new ASCIIBCD(lengthType, maximumLength, contentPad);
+    }
+
+    private ASCIIBCD(LengthType lengthType, int maximumLength, ContentPad contentPad) {
         this.lengthType = lengthType;
         this.maximumLength = maximumLength;
         this.contentPad = contentPad;
-        this.contentType = contentType;
     }
 
     @Override
@@ -43,7 +45,6 @@ public class ASCIIBCD implements ShortcutField {
                 new ASCIILengthInterpreter(),
                 LengthValue.create(lengthType.getCount(), maximumLength),
                 new BCDContentInterpreter(),
-                contentType,
                 contentPad);
         field.setFormatter(formatter);
         field.setDescription(description);

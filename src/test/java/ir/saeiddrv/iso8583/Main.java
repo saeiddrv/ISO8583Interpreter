@@ -5,6 +5,7 @@ import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.MaskCardNumber;
 import ir.saeiddrv.iso8583.message.fields.shortcuts.BCD;
 import ir.saeiddrv.iso8583.message.fields.shortcuts.BCDASCII;
+import ir.saeiddrv.iso8583.message.fields.shortcuts.BINARY;
 import ir.saeiddrv.iso8583.message.fields.shortcuts.BITMAP;
 import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.HexMessageLengthInterpreter;
@@ -29,65 +30,63 @@ public class Main {
                             .setDescription("Bit Map, Primary"));
 
             builder.defineField(2,
-                    BCD.create(LengthType.LL, 19, ContentType.NUMBER, ContentPad.RIGHT_0)
+                    BCD.create(LengthType.LL, 19, ContentPad.RIGHT_0)
                             .setDescription("Primary Account Number")
                             .setFormatter(new MaskCardNumber()));
 
             builder.defineField(3,
-                    BCD.create(LengthType.FIXED, 6, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 6, ContentPad.LEFT_0)
                             .setDescription("Processing Code"));
 
             builder.defineField(4,
-                    BCD.create(LengthType.FIXED, 12, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 12, ContentPad.LEFT_0)
                             .setDescription("Amount, Transaction"));
 
             builder.defineField(11,
-                    BCD.create(LengthType.FIXED, 6, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 6, ContentPad.LEFT_0)
                             .setDescription("System Trace Audit Number"));
 
             builder.defineField(12,
-                    BCD.create(LengthType.FIXED, 6, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 6, ContentPad.LEFT_0)
                             .setDescription("Time, Local Transaction"));
 
             builder.defineField(13,
-                    BCD.create(LengthType.FIXED, 4, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 4, ContentPad.LEFT_0)
                             .setDescription("Date, Local Transaction"));
 
             builder.defineField(24,
-                    BCD.create(LengthType.FIXED, 3, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 3, ContentPad.LEFT_0)
                             .setDescription("Network International Identifier (NII)"));
 
             builder.defineField(25,
-                    BCD.create(LengthType.FIXED, 2, ContentType.NUMBER, ContentPad.LEFT_0)
+                    BCD.create(LengthType.FIXED, 2, ContentPad.LEFT_0)
                             .setDescription("Point of Service Condition Code"));
 
             builder.defineField(35,
-                    BCD.create(LengthType.LL, 37, ContentType.TRACK2, ContentPad.RIGHT_0)
+                    BCD.create(LengthType.LL, 37, ContentPad.RIGHT_0)
                             .setDescription("Track-2 Data"));
 
             builder.defineField(41,
-                    BCDASCII.create(LengthType.FIXED, 8, ContentType.CHARACTER, ContentPad.LEFT_0)
+                    BCDASCII.create(LengthType.FIXED, 8, ContentPad.LEFT_0)
                             .setDescription("Card Acceptor Terminal Identification"));
 
             builder.defineField(42,
-                    BCDASCII.create(LengthType.FIXED, 15, ContentType.CHARACTER, ContentPad.LEFT_0)
+                    BCDASCII.create(LengthType.FIXED, 15, ContentPad.LEFT_0)
                             .setDescription("Card Acceptor Identification Code"));
 
             builder.defineField(48,
-                    BCDASCII.create(LengthType.LLL, 999, ContentType.CHARACTER, ContentPad.RIGHT_0)
+                    BCDASCII.create(LengthType.LLL, 999, ContentPad.RIGHT_0)
                             .setDescription("Additional Data"));
 
             builder.defineField(52,
-                    BCD.create(LengthType.FIXED, 8, ContentType.BINARY, ContentPad.LEFT_0)
-                            .setDescription("Personal Identification Number (PIN) Data"));
+                    BINARY.create(8).setDescription("Personal Identification Number (PIN) Data"));
 
             builder.defineField(61,
-                    BCDASCII.create(LengthType.LLL, 999, ContentType.CHARACTER, ContentPad.RIGHT_0)
+                    BCDASCII.create(LengthType.LLL, 999, ContentPad.RIGHT_0)
                             .setDescription("Point of Service (POS) Data"));
 
             builder.defineField(64,
-                    BCD.create(LengthType.FIXED, 8, ContentType.BINARY, ContentPad.LEFT_0)
-                            .setDescription("Message Authentication Code (MAC)"));
+                    BINARY.create(8).setDescription("Message Authentication Code (MAC)"));
 
             ISOMessage message = builder.build();
 

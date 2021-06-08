@@ -22,22 +22,18 @@ public class SingleField implements Field {
                 null,
                 LengthValue.UNDEFINED,
                 null,
-                ContentType.RAW,
                 ContentPad.NO_PADDING);
     }
 
     public static SingleField createFixed(int number,
                                           int maximumLength,
                                           ContentInterpreter contentInterpreter,
-                                          ContentType contentType,
                                           ContentPad contentPad) {
         return  new SingleField(number,
                 null,
                 LengthValue.create(0, maximumLength),
                 Objects.requireNonNull(contentInterpreter,
                         "ContentInterpreter of FIELD[" + number + "] must not be null"),
-                Objects.requireNonNull(contentType,
-                        "ContentType of FIELD[" + number + "] must not be null"),
                 Objects.requireNonNull(contentPad,
                         "ContentPad of FIELD[" + number + "] must not be null"));
     }
@@ -46,7 +42,6 @@ public class SingleField implements Field {
                                      LengthInterpreter lengthInterpreter,
                                      LengthValue lengthValue,
                                      ContentInterpreter contentInterpreter,
-                                     ContentType contentType,
                                      ContentPad contentPad) {
         return  new SingleField(number,
                 Objects.requireNonNull(lengthInterpreter,
@@ -55,8 +50,6 @@ public class SingleField implements Field {
                         "LengthValue of FIELD[" + number + "] must not be null"),
                 Objects.requireNonNull(contentInterpreter,
                         "ContentInterpreter of FIELD[" + number + "] must not be null"),
-                Objects.requireNonNull(contentType,
-                        "ContentType of FIELD[" + number + "] must not be null"),
                 Objects.requireNonNull(contentPad,
                         "ContentPad of FIELD[" + number + "] must not be null"));
     }
@@ -65,11 +58,10 @@ public class SingleField implements Field {
                         LengthInterpreter lengthInterpreter,
                         LengthValue lengthValue,
                         ContentInterpreter contentInterpreter,
-                        ContentType contentType,
                         ContentPad contentPad) {
         this.number = number;
         this.length = new Length(lengthValue, lengthInterpreter);
-        this.content = new Content(contentInterpreter, contentPad, contentType);
+        this.content = new Content(contentInterpreter, contentPad);
     }
 
     public Length getLength() {
@@ -135,10 +127,6 @@ public class SingleField implements Field {
 
     @Override
     public byte[] pack(Charset charset) throws IOException, ISOMessageException {
-        // FOR RAW FIELDS, EXACTLY THE DATA THAT THE USER HAS SET WILL BE RETURNED
-        if (content.isRAW())
-            return content.getValue().getValue();
-
         // PREPARE CONTENT VALUE
         if (length.isFixed())
             content.doPad(length.getMaximumValue());
@@ -147,12 +135,12 @@ public class SingleField implements Field {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         if (length.hasInterpreter())
-            buffer.write(length.pack(number, content.getLength(), charset));
+            buffer.write(length.pack(number, content.getValue().length, charset));
 
         if (content.hasInterpreter())
             buffer.write(content.pack(number, length.getValue(), charset));
         else
-            buffer.write(content.getValue().getValue());
+            buffer.write(content.getValue());
 
         // FINISHED
         return buffer.toByteArray();

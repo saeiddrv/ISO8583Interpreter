@@ -38,7 +38,13 @@ public class ContentPad {
         this.character = character;
     }
 
+    public boolean hasPadding() {
+        return getPadDirection() != PadDirection.NONE;
+    }
+
     public byte[] doPad(byte[] value, int maximumLength) {
+        if(!hasPadding()) return value;
+
         if (value.length >= maximumLength) return value;
         int padLength = maximumLength - value.length;
         switch (padDirection) {

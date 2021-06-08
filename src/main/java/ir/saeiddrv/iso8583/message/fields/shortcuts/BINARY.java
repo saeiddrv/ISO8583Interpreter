@@ -35,7 +35,6 @@ public class BINARY implements ShortcutField {
         Field field = SingleField.createFixed(fieldNumber,
                 lengthOfBytes,
                 new BinaryContentInterpreter(),
-                ContentType.BINARY,
                 ContentPad.NO_PADDING);
         field.setFormatter(formatter);
         field.setDescription(description);

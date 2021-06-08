@@ -9,20 +9,22 @@ public class BCDASCII implements ShortcutField {
 
     private final LengthType lengthType;
     private final int maximumLength;
-    private final ContentType contentType;
     private final ContentPad contentPad;
     private FieldFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public static BCDASCII create(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
-        return new BCDASCII(lengthType, maximumLength, contentType, contentPad);
+    public static BCDASCII create(LengthType lengthType, int maximumLength) {
+        return new BCDASCII(lengthType, maximumLength, ContentPad.NO_PADDING);
     }
 
-    private BCDASCII(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+    public static BCDASCII create(LengthType lengthType, int maximumLength, ContentPad contentPad) {
+        return new BCDASCII(lengthType, maximumLength, contentPad);
+    }
+
+    private BCDASCII(LengthType lengthType, int maximumLength, ContentPad contentPad) {
         this.lengthType = lengthType;
         this.maximumLength = maximumLength;
         this.contentPad = contentPad;
-        this.contentType = contentType;
     }
 
     @Override
@@ -43,7 +45,6 @@ public class BCDASCII implements ShortcutField {
                 new BCDLengthInterpreter(),
                 LengthValue.create(lengthType.getCount(), maximumLength),
                 new ASCIIContentInterpreter(),
-                contentType,
                 contentPad);
         field.setFormatter(formatter);
         field.setDescription(description);
