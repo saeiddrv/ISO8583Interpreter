@@ -133,14 +133,8 @@ public class SingleField implements Field {
 
         // START FIELD PACKING, CREATE PACK BUFFER
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-        if (length.hasInterpreter())
-            buffer.write(length.pack(number, content.getValue().length, charset));
-
-        if (content.hasInterpreter())
-            buffer.write(content.pack(number, length.getValue(), charset));
-        else
-            buffer.write(content.getValue());
+        buffer.write(length.pack(number, content.getValue().length, charset));
+        buffer.write(content.pack(number, length.getValue(), charset));
 
         // FINISHED
         return buffer.toByteArray();

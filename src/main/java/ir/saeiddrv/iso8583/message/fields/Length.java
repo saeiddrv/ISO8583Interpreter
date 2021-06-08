@@ -46,7 +46,7 @@ public class Length {
         return value.isDefined();
     }
 
-    byte[] pack(int fieldNumber, int valueBytesLength, Charset charset) throws ISOMessageException {
+    public byte[] pack(int fieldNumber, int valueBytesLength, Charset charset) throws ISOMessageException {
         if (hasInterpreter())
             return interpreter.pack(fieldNumber, value, valueBytesLength, charset);
         else

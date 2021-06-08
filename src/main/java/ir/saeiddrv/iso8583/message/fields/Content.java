@@ -16,13 +16,6 @@ public class Content {
         this.pad = contentPad;
     }
 
-    byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOMessageException {
-        if (hasInterpreter())
-            return interpreter.pack(filedNumber, length, value, pad, charset);
-        else
-            return new byte[0];
-    }
-
     public byte[] getValue() {
         return value;
     }
@@ -47,6 +40,13 @@ public class Content {
 
     public boolean hasInterpreter() {
         return interpreter != null;
+    }
+
+    public byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOMessageException {
+        if (hasInterpreter())
+            return interpreter.pack(filedNumber, length, value, pad, charset);
+        else
+            return value;
     }
 
     @Override

@@ -116,9 +116,7 @@ public class CombineField implements Field {
             contentBuffer.write(fields.get(fieldNumber).pack(charset));
         byte[] contentPack = contentBuffer.toByteArray();
 
-        if (length.hasInterpreter())
-            finalBuffer.write(length.pack(number, contentPack.length, charset));
-
+        finalBuffer.write(length.pack(number, contentPack.length, charset));
         finalBuffer.write(contentPack);
 
         // FINISHED
