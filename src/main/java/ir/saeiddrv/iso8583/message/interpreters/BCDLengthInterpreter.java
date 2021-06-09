@@ -22,10 +22,10 @@ public class BCDLengthInterpreter implements LengthInterpreter {
 
         int lengthCount = length.getCount();
         if (lengthCount > 0) {
-            int bcdLength = TypeUtils.findPreferBCDLength(lengthCount);
+            int bcdLength = TypeUtils.findPreferredLengthInBCD(lengthCount);
             String decimalLength = PadUtils.padLeft(String.valueOf(valueBytesLength), bcdLength * 2, '0');
 
-            return TypeUtils.stringToBCDBytes(decimalLength);
+            return TypeUtils.textToBCDBytes(decimalLength);
         } else {
             return new byte[0]; // FIXED LENGTH
         }

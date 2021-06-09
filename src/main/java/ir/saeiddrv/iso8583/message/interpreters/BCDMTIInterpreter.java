@@ -13,6 +13,6 @@ public class BCDMTIInterpreter implements MTIInterpreter {
 
     @Override
     public byte[] pack(String mti, Charset charset) {
-        return TypeUtils.stringToBCDBytes(mti);
+        return TypeUtils.textToBCDBytes(mti);
     }
 }

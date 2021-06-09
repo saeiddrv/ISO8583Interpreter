@@ -21,7 +21,7 @@ public class BCDMessageLengthInterpreter implements MessageLengthInterpreter {
 
             String decimalLength = PadUtils.padLeft(String.valueOf(messageBytesLength), count * 2, '0');
 
-            return TypeUtils.stringToBCDBytes(decimalLength);
+            return TypeUtils.textToBCDBytes(decimalLength);
         } else {
             return new byte[0]; // WITHOUT LENGTH
         }

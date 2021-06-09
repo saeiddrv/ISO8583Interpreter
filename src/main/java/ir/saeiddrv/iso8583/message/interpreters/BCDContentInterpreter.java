@@ -16,12 +16,12 @@ public class BCDContentInterpreter implements ContentInterpreter {
 
     @Override
     public byte[] transfer(String value, Charset charset) {
-        return TypeUtils.stringToByteArray(value);
+        return TypeUtils.textToByteArray(value);
     }
 
     @Override
     public String transfer(byte[] value, Charset charset) {
-        return TypeUtils.byteArrayToString(value);
+        return TypeUtils.byteArrayToText(value);
     }
 
     @Override

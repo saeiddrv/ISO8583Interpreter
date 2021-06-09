@@ -23,7 +23,7 @@ public class Content {
 
     public String getValueAsString(Charset charset) {
         if (hasInterpreter()) return interpreter.transfer(value, charset);
-        return TypeUtils.byteArrayToString(getValue());
+        return TypeUtils.byteArrayToText(getValue());
     }
 
     public void setValue(byte[] value) {
@@ -32,7 +32,7 @@ public class Content {
 
     public void setValue(String value, Charset charset) {
         if (hasInterpreter()) setValue(interpreter.transfer(value, charset));
-        else setValue(TypeUtils.stringToByteArray(value));
+        else setValue(TypeUtils.textToByteArray(value));
     }
 
     public void doPad(int maximumLength) {

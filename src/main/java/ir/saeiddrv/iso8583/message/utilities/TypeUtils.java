@@ -1,7 +1,6 @@
 package ir.saeiddrv.iso8583.message.utilities;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.stream.IntStream;
@@ -9,21 +8,25 @@ import java.util.stream.IntStream;
 public final class TypeUtils {
     private TypeUtils(){}
 
-    public static int findPreferBCDLength(int length) {
+    public static int findPreferredLengthInBCD(int length) {
         if (length <= 0) return 0;
         else if (length == 1) return 1;
         else if (length % 2 == 0) return length / 2;
         else return Math.floorDiv(length, 2) + 1;
     }
 
-    public static String stringToPureNumber(String text) {
+    public static String textToPureNumber(String text) {
         if (text == null || text.isEmpty()) return "";
         return text.replaceAll("[^\\d.]", "");
     }
 
     public static int[] numberStringToIntArray(String numberString) {
         if (numberString == null || numberString.isEmpty()) return new int[]{};
-        return Arrays.stream(stringToPureNumber(numberString).split("(?<=.)")).mapToInt(Integer::parseInt).toArray();
+
+        return Arrays
+                .stream(textToPureNumber(numberString).split("(?<=.)"))
+                .mapToInt(Integer::parseInt)
+                .toArray();
     }
 
     public static byte charToByte(char character) {
@@ -34,17 +37,17 @@ public final class TypeUtils {
         return (char) (int) (aByte);
     }
 
-    public static byte[] stringToByteArray(String value) {
-        if(value == null || value.isEmpty())
-            throw new IllegalArgumentException("Invalid value (convert string to byte array): " + value);
+    public static byte[] textToByteArray(String text) {
+        if(text == null || text.isEmpty())
+            throw new IllegalArgumentException("Invalid value (convert text to byte array): " + text);
 
-        byte[] bytes = new byte[value.length()];
-        for (int i =0; i < value.length(); i++)
-            bytes[i] = charToByte(value.charAt(i));
+        byte[] bytes = new byte[text.length()];
+        for (int i =0; i < text.length(); i++)
+            bytes[i] = charToByte(text.charAt(i));
         return bytes;
     }
 
-    public static String byteArrayToString(byte[] bytes) {
+    public static String byteArrayToText(byte[] bytes) {
         if(bytes == null)
             throw new IllegalArgumentException("Invalid value (convert byte array to string)");
 
@@ -72,12 +75,12 @@ public final class TypeUtils {
         return bcd;
     }
 
-    public static byte[] stringToBCDBytes(String value) {
-        byte[] bytes = stringToByteArray(value);
+    public static byte[] textToBCDBytes(String text) {
+        byte[] bytes = textToByteArray(text);
         return byteArrayToBCD(bytes);
     }
 
-    public static String bcdBytesToString(byte[] bytes) {
+    public static String bcdBytesToText(byte[] bytes) {
         char[] temp = new char[bytes.length * 2];
         char val;
         for (int i = 0; i < bytes.length; i++) {

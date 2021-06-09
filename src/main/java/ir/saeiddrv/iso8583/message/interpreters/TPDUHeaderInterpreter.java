@@ -67,9 +67,9 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
         destinationAddress = PadUtils.padLeft(destinationAddress, 4, '0');
 
         return new TPDUHeaderInterpreter(
-                TypeUtils.stringToBCDBytes(protocolID)[0],
-                TypeUtils.stringToBCDBytes(sourceAddress),
-                TypeUtils.stringToBCDBytes(destinationAddress));
+                TypeUtils.textToBCDBytes(protocolID)[0],
+                TypeUtils.textToBCDBytes(sourceAddress),
+                TypeUtils.textToBCDBytes(destinationAddress));
     }
 
     @Override

@@ -109,7 +109,7 @@ public class Main {
 
             byte[] pack = message.pack();
 
-            System.out.println(TypeUtils.bcdBytesToString(pack));
+            System.out.println(TypeUtils.bcdBytesToText(pack));
             System.out.println(TypeUtils.byteArrayToHexString(pack));
 
 //            Client.send(pack);
