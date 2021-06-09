@@ -1,6 +1,6 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISOException;
 import ir.saeiddrv.iso8583.message.fields.LengthValue;
 import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.PadUtils;
@@ -15,9 +15,9 @@ public class BCDLengthInterpreter implements LengthInterpreter {
     }
 
     @Override
-    public byte[] pack(int fieldNumber, LengthValue length, int valueBytesLength, Charset charset) throws ISOMessageException {
+    public byte[] pack(int fieldNumber, LengthValue length, int valueBytesLength, Charset charset) throws ISOException {
         if (valueBytesLength > length.getMaximumValue())
-            throw new ISOMessageException("Length of FIELD[%d] value is larger than allowed maximum size (%d).",
+            throw new ISOException("Length of FIELD[%d] value is larger than allowed maximum size (%d).",
                     fieldNumber, length.getMaximumValue());
 
         int lengthCount = length.getCount();

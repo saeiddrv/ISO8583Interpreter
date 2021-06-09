@@ -1,6 +1,6 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISOException;
 import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
 import java.nio.charset.Charset;
 
@@ -46,7 +46,7 @@ public class Length {
         return value.isDefined();
     }
 
-    public byte[] pack(int fieldNumber, int valueBytesLength, Charset charset) throws ISOMessageException {
+    public byte[] pack(int fieldNumber, int valueBytesLength, Charset charset) throws ISOException {
         if (hasInterpreter())
             return interpreter.pack(fieldNumber, value, valueBytesLength, charset);
         else

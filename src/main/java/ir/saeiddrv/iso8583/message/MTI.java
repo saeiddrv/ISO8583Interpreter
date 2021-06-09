@@ -117,7 +117,7 @@ public class MTI {
                 messageOrigin, getMessageOriginDescription());
     }
 
-    public byte[] pack(Charset charset) throws ISOMessageException {
+    public byte[] pack(Charset charset) throws ISOException {
         return interpreter.pack(getLiteral(), charset);
     }
 

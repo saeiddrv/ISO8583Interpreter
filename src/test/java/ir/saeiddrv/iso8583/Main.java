@@ -11,7 +11,6 @@ import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.HexMessageLengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.TPDUHeaderInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
-import ir.saeiddrv.iso8583.socket.Client;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
@@ -19,7 +18,7 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            ISOMessageBuilder builder = ISOMessageBuilder.create()
+            ISOBuilder builder = ISOBuilder.create()
                     .setCharset(StandardCharsets.US_ASCII)
                     .setMessageLengthInterpreter(2, new HexMessageLengthInterpreter())
                     .setHeaderInterpreter(TPDUHeaderInterpreter.formDecimal("60", "121", "121"))
@@ -32,7 +31,7 @@ public class Main {
             builder.defineField(2,
                     BCD.create(LengthType.LL, 19, ContentPad.RIGHT_0)
                             .setDescription("Primary Account Number")
-                            .setFormatter(new MaskCardNumber()));
+                            .setValueFormatter(new MaskCardNumber()));
 
             builder.defineField(3,
                     BCD.create(LengthType.FIXED, 6, ContentPad.LEFT_0)
@@ -88,7 +87,7 @@ public class Main {
             builder.defineField(64,
                     BINARY.create(8).setDescription("Message Authentication Code (MAC)"));
 
-            ISOMessage message = builder.build();
+            Message message = builder.buildMessage();
 
             message.setValue(2, "6219861026599414");
             message.setValue(3, "000000");
@@ -115,7 +114,7 @@ public class Main {
 
 //            Client.send(pack);
 
-        } catch (ISOMessageException ex) {
+        } catch (ISOException ex) {
             ex.printStackTrace();
         }
     }

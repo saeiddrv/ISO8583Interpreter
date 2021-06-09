@@ -2,7 +2,7 @@ package ir.saeiddrv.iso8583.message.fields.formatters;
 
 import ir.saeiddrv.iso8583.message.utilities.Validator;
 
-public class MaskCardNumber implements FieldFormatter {
+public class MaskCardNumber implements ValueFormatter {
 
     @Override
     public String getFormatted(int fieldNumber, String... value) {

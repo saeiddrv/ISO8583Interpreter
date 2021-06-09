@@ -1,13 +1,16 @@
 package ir.saeiddrv.iso8583.message.fields.shortcuts;
 
 import ir.saeiddrv.iso8583.message.fields.*;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BinaryContentInterpreter;
+
+import java.nio.charset.Charset;
 
 public class BINARY implements ShortcutField {
 
     private final int lengthOfBytes;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
     public static BINARY create(int lengthOfBytes) {
@@ -25,8 +28,14 @@ public class BINARY implements ShortcutField {
     }
 
     @Override
-    public ShortcutField setFormatter(FieldFormatter formatter) {
+    public ShortcutField setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
+        return this;
+    }
+
+    @Override
+    public ShortcutField setCharset(Charset charset) {
+        this.charset = charset;
         return this;
     }
 
@@ -36,7 +45,8 @@ public class BINARY implements ShortcutField {
                 lengthOfBytes,
                 new BinaryContentInterpreter(),
                 ContentPad.NO_PADDING);
-        field.setFormatter(formatter);
+        field.setCharset(charset);
+        field.setValueFormatter(formatter);
         field.setDescription(description);
         return field;
     }

@@ -8,9 +8,9 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.IntStream;
 
-public class ISOMessage {
+public class Message {
 
-    ISOMessage() {}
+    Message() {}
 
     private Charset charset = Charset.defaultCharset();
     private int lengthCount;
@@ -21,14 +21,14 @@ public class ISOMessage {
     private final List<Integer> ignoreFields = new ArrayList<>();
     private final Map<Integer, Field> fields = new HashMap<>();
 
-    private boolean isValueOK(int fieldNumber, Object value) throws ISOMessageException {
+    private boolean isValueOK(int fieldNumber, Object value) throws ISOException {
         if (!hasField(fieldNumber))
-            throw new ISOMessageException("The FIELD[%d] is not defined.", fieldNumber);
+            throw new ISOException("The FIELD[%d] is not defined.", fieldNumber);
         if (isBitmapField(fieldNumber))
-            throw new ISOMessageException("The FIELD[%d] is related to 'ISO Bitmap'. " +
+            throw new ISOException("The FIELD[%d] is related to 'ISO Bitmap'. " +
                     "The bitmap fields will set automatically.", fieldNumber);
         if (value == null)
-            throw new ISOMessageException("The contents of the field[%d] cannot be set to null. " +
+            throw new ISOException("The contents of the field[%d] cannot be set to null. " +
                     "You can use 'ignoreFields' method to ignore this field in pack process and bitmap.", fieldNumber);
         return true;
     }
@@ -76,16 +76,18 @@ public class ISOMessage {
         this.mti = mti;
     }
 
-    void addField(int number, Field field) throws ISOMessageException {
+    void addField(int number, Field field) throws ISOException {
         if (!fields.containsKey(number)) {
+            field.setCharset(charset);
             fields.put(number, field);
-        } else throw new ISOMessageException("The FIELD[%d] is already defined.", number);
+        } else throw new ISOException("The FIELD[%d] is already defined.", number);
     }
 
-    void replaceField(int number, Field field) throws ISOMessageException {
+    void replaceField(int number, Field field) throws ISOException {
         if (fields.containsKey(number)) {
+            field.setCharset(charset);
             fields.put(number, field);
-        } else throw new ISOMessageException("The FIELD[%d] is not defined.", number);
+        } else throw new ISOException("The FIELD[%d] is not defined.", number);
     }
 
     public Charset getCharset() {
@@ -196,16 +198,34 @@ public class ISOMessage {
         else return 0;
     }
 
-    public void setValue(int fieldNumber, byte[] value) throws ISOMessageException {
+    public void setValue(int fieldNumber, byte[] value) throws ISOException {
         if (isValueOK(fieldNumber, value)) {
             ((SingleField) fields.get(fieldNumber)).setValue(value);
         }
     }
 
-    public void setValue(int fieldNumber, String value) throws ISOMessageException {
+    public void setValue(int fieldNumber, String value) throws ISOException {
         if (isValueOK(fieldNumber, value)) {
-            ((SingleField) fields.get(fieldNumber)).setValue(value);
+            ((SingleField) fields.get(fieldNumber)).setValue(value, charset);
         }
+    }
+
+    public byte[] getValue(int fieldNumber) {
+        if (hasField(fieldNumber))
+            return fields.get(fieldNumber).getValue();
+        else return null;
+    }
+
+    public String getValueAsString(int fieldNumber) {
+        if (hasField(fieldNumber))
+            return fields.get(fieldNumber).getValueAsString();
+        else return null;
+    }
+
+    public String getValueFormatted(int fieldNumber) {
+        if (hasField(fieldNumber))
+            return fields.get(fieldNumber).getValueFormatted();
+        else return null;
     }
 
     public void clearValue(int fieldNumber) {
@@ -226,7 +246,7 @@ public class ISOMessage {
         printStream.println(builder.toString());
     }
 
-    public byte[] pack() throws ISOMessageException {
+    public byte[] pack() throws ISOException {
         try {
             // CREATE PACK BUFFER
             ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
@@ -241,7 +261,7 @@ public class ISOMessage {
 
             // PACK ALL AVAILABLE FIELDS
             for (int fieldNumber : getFieldNumbers(true))
-                messageBuffer.write(fields.get(fieldNumber).pack(charset));
+                messageBuffer.write(fields.get(fieldNumber).pack());
 
             // PACK MESSAGE LENGTH AND MERGE IT
             ByteArrayOutputStream finalPack = new ByteArrayOutputStream();
@@ -257,7 +277,7 @@ public class ISOMessage {
 
         } catch (Exception exception) {
             exception.printStackTrace();
-            throw new ISOMessageException("PACK ERROR (%s)", exception.getMessage());
+            throw new ISOException("PACK ERROR: %s", exception.getMessage());
         }
     }
 }

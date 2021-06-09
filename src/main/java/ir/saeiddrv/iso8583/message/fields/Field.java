@@ -1,8 +1,7 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
-import java.io.IOException;
+import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import java.nio.charset.Charset;
 
 public interface Field {
@@ -11,18 +10,22 @@ public interface Field {
 
     public boolean hasFormatter();
 
-    public void setFormatter(FieldFormatter formatter);
-
-    public String getFormatted();
+    public void setCharset(Charset charset);
 
     public void setDescription(String description);
 
-    public String getValue();
+    public byte[] getValue();
+
+    public String getValueAsString();
+
+    public void setValueFormatter(ValueFormatter formatter);
+
+    public String getValueFormatted();
 
     public String getDescription();
 
     public void clear();
 
-    public byte[] pack(Charset charset) throws IOException, ISOMessageException;
+    public byte[] pack() throws ISOException;
 
 }

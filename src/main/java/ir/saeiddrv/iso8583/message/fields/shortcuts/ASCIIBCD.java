@@ -1,16 +1,19 @@
 package ir.saeiddrv.iso8583.message.fields.shortcuts;
 
 import ir.saeiddrv.iso8583.message.fields.*;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.ASCIILengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.BCDContentInterpreter;
+
+import java.nio.charset.Charset;
 
 public class ASCIIBCD implements ShortcutField {
 
     private final LengthType lengthType;
     private final int maximumLength;
     private final ContentPad contentPad;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
     public static ASCIIBCD create(LengthType lengthType, int maximumLength) {
@@ -34,8 +37,14 @@ public class ASCIIBCD implements ShortcutField {
     }
 
     @Override
-    public ShortcutField setFormatter(FieldFormatter formatter) {
+    public ShortcutField setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
+        return this;
+    }
+
+    @Override
+    public ShortcutField setCharset(Charset charset) {
+        this.charset = charset;
         return this;
     }
 
@@ -46,7 +55,8 @@ public class ASCIIBCD implements ShortcutField {
                 LengthValue.create(lengthType.getCount(), maximumLength),
                 new BCDContentInterpreter(),
                 contentPad);
-        field.setFormatter(formatter);
+        field.setCharset(charset);
+        field.setValueFormatter(formatter);
         field.setDescription(description);
         return field;
     }

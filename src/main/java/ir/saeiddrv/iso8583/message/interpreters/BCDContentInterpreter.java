@@ -1,7 +1,7 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
 import ir.saeiddrv.iso8583.message.fields.ContentPad;
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISOException;
 import ir.saeiddrv.iso8583.message.fields.LengthValue;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
@@ -15,12 +15,12 @@ public class BCDContentInterpreter implements ContentInterpreter {
     }
 
     @Override
-    public byte[] transfer(String value) {
+    public byte[] transfer(String value, Charset charset) {
         return TypeUtils.stringToByteArray(value);
     }
 
     @Override
-    public String transfer(byte[] value) {
+    public String transfer(byte[] value, Charset charset) {
         return TypeUtils.byteArrayToString(value);
     }
 
@@ -29,14 +29,14 @@ public class BCDContentInterpreter implements ContentInterpreter {
                        LengthValue length,
                        byte[] value,
                        ContentPad pad,
-                       Charset charset) throws ISOMessageException {
+                       Charset charset) throws ISOException {
 
         int valueLength = value.length;
         boolean hasOddLength = valueLength % 2 != 0;
 
         if (hasOddLength) {
             if (!pad.hasPadding())
-                throw new ISOMessageException("FIELD[%d] length is odd and no pad have been set for it.", fieldNumber);
+                throw new ISOException("FIELD[%d] length is odd and no pad have been set for it.", fieldNumber);
             value = pad.doPad(value, valueLength + 1);
         }
 

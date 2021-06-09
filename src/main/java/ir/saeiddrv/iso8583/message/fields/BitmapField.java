@@ -1,12 +1,11 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISOException;
 import ir.saeiddrv.iso8583.message.Range;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
@@ -15,7 +14,8 @@ public class BitmapField implements Field {
     private final int number;
     private final Bitmap bitmap;
     private final BitmapInterpreter interpreter;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
     public static BitmapField createPrimary() {
@@ -83,13 +83,18 @@ public class BitmapField implements Field {
     }
 
     @Override
-    public void setFormatter(FieldFormatter formatter) {
+    public void setCharset(Charset charset) {
+        if(this.charset == null) this.charset = charset;
+    }
+
+    @Override
+    public void setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
     }
 
     @Override
-    public String getFormatted() {
-        if (hasFormatter()) return formatter.getFormatted(number, getValue());
+    public String getValueFormatted() {
+        if (hasFormatter()) return formatter.getFormatted(number, getValueAsString());
         else return null;
     }
 
@@ -99,7 +104,12 @@ public class BitmapField implements Field {
     }
 
     @Override
-    public String getValue() {
+    public byte[] getValue() {
+        return getBitmap().getValue();
+    }
+
+    @Override
+    public String getValueAsString() {
         return TypeUtils.byteArrayToHexString(getBitmap().getValue());
     }
 
@@ -114,13 +124,22 @@ public class BitmapField implements Field {
     }
 
     @Override
-    public byte[] pack(Charset charset) throws IOException, ISOMessageException {
-        return interpreter.pack(bitmap, charset);
+    public byte[] pack() throws ISOException {
+        try {
+            return interpreter.pack(bitmap, charset);
+        } catch (Exception exception) {
+            throw new ISOException("FIELD[%s]: %s", number, exception.getMessage());
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("@BitmapField[number: %s, value: %s, bitmap: %s, interpreter: %s, description: %s]",
-                number, hasFormatter() ? getFormatted() : getValue(), bitmap, interpreter.getName(), description);
+        return String.format("@BitmapField[number: %s, value: %s, bitmap: %s, charset: %s, interpreter: %s, description: %s]",
+                number,
+                hasFormatter() ? getValueFormatted() : getValueAsString(),
+                bitmap,
+                charset.displayName(),
+                interpreter.getName(),
+                description);
     }
 }

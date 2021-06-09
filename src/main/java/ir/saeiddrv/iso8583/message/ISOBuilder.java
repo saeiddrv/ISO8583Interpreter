@@ -9,51 +9,51 @@ import ir.saeiddrv.iso8583.message.utilities.Validator;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
-public class ISOMessageBuilder {
+public class ISOBuilder {
 
-    private final ISOMessage message;
+    private final Message message;
 
-    private ISOMessageBuilder() {
-        this(new ISOMessage());
+    private ISOBuilder() {
+        this(new Message());
     }
 
-    private ISOMessageBuilder(ISOMessage message) {
+    private ISOBuilder(Message message) {
         this.message = message;
     }
 
-    private boolean isFieldNumberOK(int fieldNumber) throws ISOMessageException {
+    private boolean isFieldNumberOK(int fieldNumber) throws ISOException {
         if (fieldNumber < 0 || fieldNumber > 192)
-            throw new ISOMessageException("The field number in ISO8583 cannot be less than '0' or greater than '129'.");
+            throw new ISOException("The field number in ISO8583 cannot be less than '0' or greater than '129'.");
         return true;
     }
 
-    public static ISOMessageBuilder create() {
-        return new ISOMessageBuilder();
+    public static ISOBuilder create() {
+        return new ISOBuilder();
     }
 
-    public static ISOMessageBuilder from(ISOMessage message) {
-        return new ISOMessageBuilder(message);
+    public static ISOBuilder from(Message message) {
+        return new ISOBuilder(message);
     }
 
-    public ISOMessageBuilder setDescription(String description) {
+    public ISOBuilder setDescription(String description) {
         message.setDescription(description);
         return this;
     }
 
-    public ISOMessageBuilder setCharset(Charset charset) {
+    public ISOBuilder setCharset(Charset charset) {
         if (charset != null)
             message.setCharset(charset);
         return this;
     }
 
-    public ISOMessageBuilder setCharset(String charsetName) {
+    public ISOBuilder setCharset(String charsetName) {
         if (charsetName != null)
             message.setCharset(Charset.forName(charsetName));
         return this;
     }
 
-    public ISOMessageBuilder setMessageLengthInterpreter(int lengthCount,
-                                                         MessageLengthInterpreter interpreter) {
+    public ISOBuilder setMessageLengthInterpreter(int lengthCount,
+                                                  MessageLengthInterpreter interpreter) {
         message.setLengthCount(lengthCount);
         message.setLengthInterpreter(
                 Objects.requireNonNull(interpreter,
@@ -61,15 +61,15 @@ public class ISOMessageBuilder {
         return this;
     }
 
-    public ISOMessageBuilder setHeaderInterpreter(HeaderInterpreter interpreter) {
+    public ISOBuilder setHeaderInterpreter(HeaderInterpreter interpreter) {
         message.setHeader(new Header(
                 Objects.requireNonNull(interpreter,
                         "The 'Header Interpreter' cannot be set to null.")));
         return this;
     }
 
-    public ISOMessageBuilder setMTI(String mtiLiteral,
-                                    MTIInterpreter interpreter) throws ISOMessageException {
+    public ISOBuilder setMTI(String mtiLiteral,
+                             MTIInterpreter interpreter) throws ISOException {
         if (Validator.mti(mtiLiteral)) {
             int[] mtiArray = TypeUtils.numberStringToIntArray(mtiLiteral);
             message.setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3],
@@ -77,12 +77,12 @@ public class ISOMessageBuilder {
             );
             return this;
         }
-        throw new ISOMessageException("[%s] Is an invalid value for ISO8583 MTI, " +
+        throw new ISOException("[%s] Is an invalid value for ISO8583 MTI, " +
                 "The message type indicator is a four-digit numeric field " +
                 "which indicates the overall function of the message.", mtiLiteral);
     }
 
-    public ISOMessageBuilder defineField(SingleField singleField) throws ISOMessageException {
+    public ISOBuilder defineField(SingleField singleField) throws ISOException {
         if (singleField != null) {
             if (isFieldNumberOK(singleField.getNumber()))
                 message.addField(singleField.getNumber(), singleField);
@@ -90,26 +90,26 @@ public class ISOMessageBuilder {
         return this;
     }
 
-    public ISOMessageBuilder reDefineField(Field field) throws ISOMessageException {
+    public ISOBuilder reDefineField(Field field) throws ISOException {
         if (field != null)
             message.replaceField(field.getNumber(), field);
         return this;
     }
 
-    public ISOMessageBuilder defineField(int number, ShortcutField field) throws ISOMessageException {
+    public ISOBuilder defineField(int number, ShortcutField field) throws ISOException {
         if (isFieldNumberOK(number))
             message.addField(number, Objects.requireNonNull(field,
                     "The 'Field'[" + number + "] cannot be set to null").toField(number));
         return this;
     }
 
-    public ISOMessageBuilder reDefineField(int number, ShortcutField field) throws ISOMessageException {
+    public ISOBuilder reDefineField(int number, ShortcutField field) throws ISOException {
         message.replaceField(number, Objects.requireNonNull(field,
                 "The 'Field'[" + number + "] cannot be set to null").toField(number));
         return this;
     }
 
-    public ISOMessage build() throws ISOMessageException {
+    public Message buildMessage() throws ISOException {
         message.setBitmaps();
         return message;
     }

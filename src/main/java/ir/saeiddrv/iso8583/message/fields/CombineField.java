@@ -1,21 +1,19 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISOException;
 import ir.saeiddrv.iso8583.message.Range;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CombineField implements Field {
 
     private final int number;
     private final Length length;
     private final Map<Integer, Field> fields = new HashMap<>();
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
     public CombineField(int number, Length length, Field... fields) {
@@ -71,13 +69,18 @@ public class CombineField implements Field {
     }
 
     @Override
-    public void setFormatter(FieldFormatter formatter) {
+    public void setCharset(Charset charset) {
+        if(this.charset == null) this.charset = charset;
+    }
+
+    @Override
+    public void setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
     }
 
     @Override
-    public String getFormatted() {
-        if (hasFormatter()) return formatter.getFormatted(number, getValue());
+    public String getValueFormatted() {
+        if (hasFormatter()) return formatter.getFormatted(number, getValueAsString());
         else return null;
     }
 
@@ -87,10 +90,23 @@ public class CombineField implements Field {
     }
 
     @Override
-    public String getValue() {
+    public byte[] getValue() {
+        try {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            for (int fieldNumber : getFieldNumbers())
+                buffer.write(fields.get(fieldNumber).getValue());
+            return buffer.toByteArray();
+
+        } catch (Exception exception) {
+            return null;
+        }
+    }
+
+    @Override
+    public String getValueAsString() {
         StringBuilder builder = new StringBuilder();
         for (int fieldNumber : getFieldNumbers())
-            builder.append(fields.get(fieldNumber).getValue());
+            builder.append(fields.get(fieldNumber).getValueAsString());
         return builder.toString();
     }
 
@@ -105,22 +121,27 @@ public class CombineField implements Field {
     }
 
     @Override
-    public byte[] pack(Charset charset) throws IOException, ISOMessageException {
-        setBitmaps();
-        // START FIELD PACKING, CREATE PACK BUFFER
-        ByteArrayOutputStream finalBuffer = new ByteArrayOutputStream();
+    public byte[] pack() throws ISOException {
+        try {
+            setBitmaps();
+            // START FIELD PACKING, CREATE PACK BUFFER
+            ByteArrayOutputStream finalBuffer = new ByteArrayOutputStream();
 
-        // PACK ALL AVAILABLE FIELDS
-        ByteArrayOutputStream contentBuffer = new ByteArrayOutputStream();
-        for (int fieldNumber : getFieldNumbers())
-            contentBuffer.write(fields.get(fieldNumber).pack(charset));
-        byte[] contentPack = contentBuffer.toByteArray();
+            // PACK ALL AVAILABLE FIELDS
+            ByteArrayOutputStream contentBuffer = new ByteArrayOutputStream();
+            for (int fieldNumber : getFieldNumbers())
+                contentBuffer.write(fields.get(fieldNumber).pack());
+            byte[] contentPack = contentBuffer.toByteArray();
 
-        finalBuffer.write(length.pack(number, contentPack.length, charset));
-        finalBuffer.write(contentPack);
+            finalBuffer.write(length.pack(number, contentPack.length, charset));
+            finalBuffer.write(contentPack);
 
-        // FINISHED
-        return finalBuffer.toByteArray();
+            // FINISHED
+            return finalBuffer.toByteArray();
+
+        } catch (Exception exception) {
+            throw new ISOException("FIELD[%s]: %s", number, exception.getMessage());
+        }
     }
 
     @Override
@@ -128,7 +149,12 @@ public class CombineField implements Field {
         StringBuilder stringBuilder = new StringBuilder();
         for (Field field : fields.values())
             stringBuilder.append("    ->").append(field.toString()).append("\n");
-        return String.format("@CombineField[number: %s, value: %s, fieldCount: %s, description: %s, subFields:\n%s]",
-                number, hasFormatter() ? getFormatted() : getValue(), fields.size(), description, stringBuilder.toString());
+        return String.format("@CombineField[number: %s, value: %s, fieldCount: %s, charset: %s, description: %s, subFields:\n%s]",
+                number,
+                hasFormatter() ? getValueFormatted() : getValueAsString(),
+                fields.size(),
+                charset.displayName(),
+                description,
+                stringBuilder.toString());
     }
 }

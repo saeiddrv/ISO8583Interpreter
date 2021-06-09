@@ -14,12 +14,12 @@ public class ASCIIContentInterpreter implements ContentInterpreter {
     }
 
     @Override
-    public byte[] transfer(String value) {
+    public byte[] transfer(String value, Charset charset) {
         return TypeUtils.stringToByteArray(value);
     }
 
     @Override
-    public String transfer(byte[] value) {
+    public String transfer(byte[] value, Charset charset) {
         return TypeUtils.byteArrayToString(value);
     }
 

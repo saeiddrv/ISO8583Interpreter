@@ -1,9 +1,10 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISOException;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class Content {
 
@@ -20,8 +21,8 @@ public class Content {
         return value;
     }
 
-    public String getValueAsString() {
-        if (hasInterpreter()) return interpreter.transfer(getValue());
+    public String getValueAsString(Charset charset) {
+        if (hasInterpreter()) return interpreter.transfer(value, charset);
         return TypeUtils.byteArrayToString(getValue());
     }
 
@@ -29,8 +30,8 @@ public class Content {
         this.value = value;
     }
 
-    public void setValue(String value) {
-        if (hasInterpreter()) setValue(interpreter.transfer(value));
+    public void setValue(String value, Charset charset) {
+        if (hasInterpreter()) setValue(interpreter.transfer(value, charset));
         else setValue(TypeUtils.stringToByteArray(value));
     }
 
@@ -42,7 +43,7 @@ public class Content {
         return interpreter != null;
     }
 
-    public byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOMessageException {
+    public byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOException {
         if (hasInterpreter())
             return interpreter.pack(filedNumber, length, value, pad, charset);
         else
@@ -52,6 +53,6 @@ public class Content {
     @Override
     public String toString() {
         return String.format("@Content[value: %s, pad: %s, interpreter: %s]",
-                getValueAsString(), pad, interpreter.getName());
+                Arrays.toString(value), pad, interpreter.getName());
     }
 }

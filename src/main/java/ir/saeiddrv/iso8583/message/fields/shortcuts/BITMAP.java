@@ -2,9 +2,11 @@ package ir.saeiddrv.iso8583.message.fields.shortcuts;
 
 import ir.saeiddrv.iso8583.message.Range;
 import ir.saeiddrv.iso8583.message.fields.*;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
+
+import java.nio.charset.Charset;
 
 public class BITMAP implements ShortcutField {
 
@@ -12,7 +14,8 @@ public class BITMAP implements ShortcutField {
     private final int length;
     private final Range range;
     private final BitmapInterpreter interpreter;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
     public static BITMAP create(BitmapType type, int length, Range range) {
@@ -30,8 +33,14 @@ public class BITMAP implements ShortcutField {
     }
 
     @Override
-    public ShortcutField setFormatter(FieldFormatter formatter) {
+    public ShortcutField setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
+        return this;
+    }
+
+    @Override
+    public ShortcutField setCharset(Charset charset) {
+        this.charset = charset;
         return this;
     }
 
@@ -45,7 +54,8 @@ public class BITMAP implements ShortcutField {
     @Override
     public Field toField(int fieldNumber) {
         Field field = BitmapField.create(fieldNumber, type, range, length, interpreter);
-        field.setFormatter(formatter);
+        field.setCharset(charset);
+        field.setValueFormatter(formatter);
         field.setDescription(description);
         return field;
     }
