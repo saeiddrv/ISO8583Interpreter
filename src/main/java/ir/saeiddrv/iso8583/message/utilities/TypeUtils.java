@@ -1,5 +1,6 @@
 package ir.saeiddrv.iso8583.message.utilities;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -27,6 +28,18 @@ public final class TypeUtils {
                 .stream(textToPureNumber(numberString).split("(?<=.)"))
                 .mapToInt(Integer::parseInt)
                 .toArray();
+    }
+
+    public static String decodeBytes(byte[] bytes, Charset charset) {
+        return charset.decode(ByteBuffer.wrap(bytes)).toString();
+    }
+
+    public static byte[] encodeBytes(byte[] bytes, Charset charset) {
+        return charset.encode(new String(bytes, charset)).array();
+    }
+
+    public static byte[] encodeBytes(String value, Charset charset) {
+        return charset.encode(value).array();
     }
 
     public static byte charToByte(char character) {

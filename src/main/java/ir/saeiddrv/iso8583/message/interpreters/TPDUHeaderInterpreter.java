@@ -79,10 +79,11 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
 
     @Override
     public byte[] pack(Charset charset) {
-        return ByteBuffer.allocate(5)
+        byte[] pack = ByteBuffer.allocate(5)
                 .put(protocolID)
                 .put(sourceAddress)
                 .put(destinationAddress)
                 .array();
+        return TypeUtils.encodeBytes(pack, charset);
     }
 }

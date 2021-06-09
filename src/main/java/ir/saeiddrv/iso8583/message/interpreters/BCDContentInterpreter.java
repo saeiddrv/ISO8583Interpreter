@@ -40,6 +40,7 @@ public class BCDContentInterpreter implements ContentInterpreter {
             value = pad.doPad(value, valueLength + 1);
         }
 
-        return TypeUtils.byteArrayToBCD(value);
+        byte[] pack = TypeUtils.byteArrayToBCD(value);
+        return TypeUtils.encodeBytes(pack, charset);
     }
 }

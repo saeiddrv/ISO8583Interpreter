@@ -41,6 +41,6 @@ public class BinaryContentInterpreter implements ContentInterpreter {
             throw new ISOException("FIELD[%d] length (%s) is larger than of defined length (%s).",
                     valueLength, fixedLength, fieldNumber);
 
-        return value;
+        return TypeUtils.encodeBytes(value, charset);
     }
 }

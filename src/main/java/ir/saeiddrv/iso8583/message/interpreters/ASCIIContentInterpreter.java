@@ -29,6 +29,7 @@ public class ASCIIContentInterpreter implements ContentInterpreter {
                        byte[] value,
                        ContentPad pad,
                        Charset charset) {
-        return TypeUtils.byteArrayToHexArray(value, charset);
+        byte[] pack = TypeUtils.byteArrayToHexArray(value, charset);
+        return TypeUtils.encodeBytes(pack, charset);
     }
 }

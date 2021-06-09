@@ -28,7 +28,8 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
 
             byte[] pad = (count > lengthBytesCount) ? new byte[count - lengthBytesCount] : new byte[0];
 
-            return ByteBuffer.allocate(count).put(pad).put(lengthBytes).array();
+            byte[] pack = ByteBuffer.allocate(count).put(pad).put(lengthBytes).array();
+            return TypeUtils.encodeBytes(pack, charset);
         } else {
             return new byte[0]; // WITHOUT LENGTH
         }

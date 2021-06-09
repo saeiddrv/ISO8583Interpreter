@@ -11,6 +11,8 @@ import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.HexMessageLengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.TPDUHeaderInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
+import ir.saeiddrv.iso8583.socket.Client;
+
 import java.nio.charset.StandardCharsets;
 
 public class Main {
@@ -19,7 +21,7 @@ public class Main {
         try {
 
             ISOBuilder builder = ISOBuilder.create()
-                    .setCharset(StandardCharsets.US_ASCII)
+                    .setCharset(StandardCharsets.ISO_8859_1)
                     .setMessageLengthInterpreter(2, new HexMessageLengthInterpreter())
                     .setHeaderInterpreter(TPDUHeaderInterpreter.formDecimal("60", "121", "121"))
                     .setMTI("0200", new BCDMTIInterpreter());
