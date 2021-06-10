@@ -1,6 +1,7 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.charset.Charset;
@@ -43,11 +44,22 @@ public class Content {
         return interpreter != null;
     }
 
-    public byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOException {
+    public byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISO8583Exception {
         if (hasInterpreter())
             return interpreter.pack(filedNumber, length, value, pad, charset);
         else
             return value;
+    }
+
+    public UnpackContentResult unpack(byte[] message, int offset, int filedNumber, int length, Charset charset) throws ISO8583Exception {
+        if (hasInterpreter())
+            return interpreter.unpack(message, offset, filedNumber, length, pad, charset);
+        else {
+            int endOffset = offset + length;
+            byte[] unpack = Arrays.copyOfRange(message, offset, offset + length);
+            unpack = TypeUtils.encodeBytes(unpack, charset);
+            return new UnpackContentResult(unpack, endOffset);
+        }
     }
 
     @Override

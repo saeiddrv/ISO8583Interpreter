@@ -20,7 +20,7 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            ISOBuilder builder = ISOBuilder.create()
+            ISO8583 builder = ISO8583.create()
                     .setCharset(StandardCharsets.ISO_8859_1)
                     .setMessageLengthInterpreter(2, new HexMessageLengthInterpreter())
                     .setHeaderInterpreter(TPDUHeaderInterpreter.formDecimal("60", "121", "121"))
@@ -110,13 +110,17 @@ public class Main {
             message.printObject(System.out);
 
             byte[] pack = message.pack();
-
             System.out.println(TypeUtils.bcdBytesToText(pack));
-            System.out.println(TypeUtils.byteArrayToHexString(pack));
 
-//            Client.send(pack);
+            System.out.println("=========================================");
 
-        } catch (ISOException ex) {
+            message = builder.unpackMessage(pack);
+            byte[] packAgain = message.pack();
+            System.out.println(TypeUtils.bcdBytesToText(packAgain));
+
+//            Client.send(packAgain);
+
+        } catch (ISO8583Exception ex) {
             ex.printStackTrace();
         }
     }

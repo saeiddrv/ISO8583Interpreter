@@ -1,6 +1,7 @@
 package ir.saeiddrv.iso8583.message;
 
 import ir.saeiddrv.iso8583.message.interpreters.base.MTIInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackMTIResult;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
@@ -22,6 +23,10 @@ public class MTI {
         this.messageFunction = messageFunction;
         this.messageOrigin = messageOrigin;
         this.interpreter = interpreter;
+    }
+
+    MTIInterpreter getInterpreter() {
+        return interpreter;
     }
 
     public int getIsoVersion() {
@@ -117,8 +122,12 @@ public class MTI {
                 messageOrigin, getMessageOriginDescription());
     }
 
-    public byte[] pack(Charset charset) throws ISOException {
+    public byte[] pack(Charset charset) throws ISO8583Exception {
         return interpreter.pack(getLiteral(), charset);
+    }
+
+    public UnpackMTIResult unpack(byte[] message, int offset, Charset charset) throws ISO8583Exception {
+        return interpreter.unpack(message, offset, charset);
     }
 
     @Override

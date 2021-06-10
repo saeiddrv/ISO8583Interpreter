@@ -2,6 +2,10 @@ package ir.saeiddrv.iso8583.message;
 
 import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.interpreters.base.MessageLengthInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackMTIResult;
+import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
@@ -21,14 +25,14 @@ public class Message {
     private final List<Integer> ignoreFields = new ArrayList<>();
     private final Map<Integer, Field> fields = new HashMap<>();
 
-    private boolean isValueOK(int fieldNumber, Object value) throws ISOException {
+    private boolean isValueOK(int fieldNumber, Object value) throws ISO8583Exception {
         if (!hasField(fieldNumber))
-            throw new ISOException("The FIELD[%d] is not defined.", fieldNumber);
+            throw new ISO8583Exception("The FIELD[%d] is not defined.", fieldNumber);
         if (isBitmapField(fieldNumber))
-            throw new ISOException("The FIELD[%d] is related to 'ISO Bitmap'. " +
+            throw new ISO8583Exception("The FIELD[%d] is related to 'ISO Bitmap'. " +
                     "The bitmap fields will set automatically.", fieldNumber);
         if (value == null)
-            throw new ISOException("The contents of the field[%d] cannot be set to null. " +
+            throw new ISO8583Exception("The contents of the field[%d] cannot be set to null. " +
                     "You can use 'ignoreFields' method to ignore this field in pack process and bitmap.", fieldNumber);
         return true;
     }
@@ -76,18 +80,18 @@ public class Message {
         this.mti = mti;
     }
 
-    void addField(int number, Field field) throws ISOException {
+    void addField(int number, Field field) throws ISO8583Exception {
         if (!fields.containsKey(number)) {
             field.setCharset(charset);
             fields.put(number, field);
-        } else throw new ISOException("The FIELD[%d] is already defined.", number);
+        } else throw new ISO8583Exception("The FIELD[%d] is already defined.", number);
     }
 
-    void replaceField(int number, Field field) throws ISOException {
+    void replaceField(int number, Field field) throws ISO8583Exception {
         if (fields.containsKey(number)) {
             field.setCharset(charset);
             fields.put(number, field);
-        } else throw new ISOException("The FIELD[%d] is not defined.", number);
+        } else throw new ISO8583Exception("The FIELD[%d] is not defined.", number);
     }
 
     public Charset getCharset() {
@@ -198,13 +202,13 @@ public class Message {
         else return 0;
     }
 
-    public void setValue(int fieldNumber, byte[] value) throws ISOException {
+    public void setValue(int fieldNumber, byte[] value) throws ISO8583Exception {
         if (isValueOK(fieldNumber, value)) {
             ((SingleField) fields.get(fieldNumber)).setValue(value);
         }
     }
 
-    public void setValue(int fieldNumber, String value) throws ISOException {
+    public void setValue(int fieldNumber, String value) throws ISO8583Exception {
         if (isValueOK(fieldNumber, value)) {
             ((SingleField) fields.get(fieldNumber)).setValue(value, charset);
         }
@@ -246,7 +250,7 @@ public class Message {
         printStream.println(builder.toString());
     }
 
-    public byte[] pack() throws ISOException {
+    public byte[] pack() throws ISO8583Exception {
         try {
             // CREATE PACK BUFFER
             ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
@@ -277,7 +281,52 @@ public class Message {
 
         } catch (Exception exception) {
             exception.printStackTrace();
-            throw new ISOException("PACK ERROR: %s", exception.getMessage());
+            throw new ISO8583Exception("PACK ERROR: %s", exception.getMessage());
+        }
+    }
+
+    public Message unpack(byte[] packMessage) throws ISO8583Exception {
+        try {
+            // INIT OFFSET
+            int offset = 0;
+
+            // UNPACK MESSAGE LENGTH (IF EXIST)
+            if (lengthInterpreter != null) {
+                UnpackLengthResult unpackMessageLength =
+                        lengthInterpreter.unpack(packMessage, offset, lengthCount, charset);
+                offset = unpackMessageLength.getNextOffset();
+                System.out.println("unpackMessageLength: " + unpackMessageLength.getValue());
+            }
+
+            // UNPACK HEADER (IF EXIST)
+            if (header != null) {
+                UnpackContentResult unpackHeader = header.unpack(packMessage, offset, charset);
+                offset = unpackHeader.getNextOffset();
+                System.out.println("unpackHeader: " + TypeUtils.bcdBytesToText(unpackHeader.getValue()));
+            }
+
+            // UNPACK MTI (IF EXIST)
+            if (mti != null) {
+                UnpackMTIResult unpackMTI = mti.unpack(packMessage, offset, charset);
+                int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
+                setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
+                offset = unpackMTI.getNextOffset();
+                System.out.println("unpackMTI: " + unpackMTI.getValue());
+            }
+
+            // UNPACK ALL AVAILABLE FIELDS
+            for (int fieldNumber : getFieldNumbers(true)) {
+                Field field = fields.get(fieldNumber);
+                field.clear();
+                offset = field.unpack(packMessage, offset);
+                System.out.println(field);
+            }
+
+            return this;
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            throw new ISO8583Exception("PACK ERROR: %s", exception.getMessage());
         }
     }
 }

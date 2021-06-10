@@ -4,6 +4,9 @@ import ir.saeiddrv.iso8583.message.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.Objects;
@@ -136,7 +139,7 @@ public class SingleField implements Field {
     }
 
     @Override
-    public byte[] pack() throws ISOException {
+    public byte[] pack() throws ISO8583Exception {
         try {
             // PREPARE CONTENT VALUE
             if (length.isFixed())
@@ -151,7 +154,35 @@ public class SingleField implements Field {
             return buffer.toByteArray();
 
         } catch (Exception exception) {
-            throw new ISOException("FIELD[%s]: %s", number, exception.getMessage());
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
+    }
+
+    @Override
+    public int unpack(byte[] message, int offset) throws ISO8583Exception {
+        try {
+            // UNPACK LENGTH
+            int messageLength = 0;
+            if (length.isFixed()) {
+                messageLength = length.getMaximumValue();
+            } else if (length.hasInterpreter()) {
+                UnpackLengthResult unpackLength = length.unpack(message, offset, number, charset);
+                if (unpackLength != null) {
+                    messageLength = unpackLength.getValue();
+                    offset = unpackLength.getNextOffset();
+                }
+            }
+
+            // UNPACK CONTENT
+            UnpackContentResult unpackContent = content.unpack(message, offset, number, messageLength, charset);
+            setValue(unpackContent.getValue());
+
+            // FINISHED
+            return unpackContent.getNextOffset();
+
+        }  catch (Exception exception) {
+            exception.printStackTrace();
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
         }
     }
 

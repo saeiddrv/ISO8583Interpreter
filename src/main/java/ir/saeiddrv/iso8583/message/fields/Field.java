@@ -1,6 +1,6 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import java.nio.charset.Charset;
 
@@ -26,6 +26,7 @@ public interface Field {
 
     public void clear();
 
-    public byte[] pack() throws ISOException;
+    public byte[] pack() throws ISO8583Exception;
 
+    public int unpack(byte[] message, int offset) throws ISO8583Exception;
 }

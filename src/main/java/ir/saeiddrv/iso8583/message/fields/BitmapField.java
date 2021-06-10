@@ -1,7 +1,8 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.Range;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackBitmapResult;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
@@ -124,11 +125,25 @@ public class BitmapField implements Field {
     }
 
     @Override
-    public byte[] pack() throws ISOException {
+    public byte[] pack() throws ISO8583Exception {
         try {
             return interpreter.pack(bitmap, charset);
         } catch (Exception exception) {
-            throw new ISOException("FIELD[%s]: %s", number, exception.getMessage());
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
+    }
+
+    @Override
+    public int unpack(byte[] message, int offset) throws ISO8583Exception {
+        try {
+            // UNPACK BITMAP
+            UnpackBitmapResult unpackBitmap = interpreter.unpack(message, offset, bitmap.getLength(), bitmap.getRange(), charset);
+            bitmap.setFiledNumbers(unpackBitmap.getValue());
+
+            return unpackBitmap.getNextOffset();
+
+        }  catch (Exception exception) {
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
         }
     }
 

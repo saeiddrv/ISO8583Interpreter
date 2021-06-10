@@ -163,4 +163,13 @@ public final class TypeUtils {
                 .collect(() -> new StringBuilder(size), StringBuilder::append, StringBuilder::append)
                 .toString();
     }
+
+    public static BitSet byteArray2BitSet(byte[] bytes, int size, int offset) {
+        int length = bytes.length << 3;
+        BitSet bitSet = new BitSet(size * 8);
+        for (int i=0; i< length; i++)
+            if ((bytes[i >> 3] & 0x80 >> i % 8) > 0)
+                bitSet.set(i);
+        return bitSet;
+    }
 }

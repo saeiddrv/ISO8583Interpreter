@@ -1,11 +1,13 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import ir.saeiddrv.iso8583.message.interpreters.base.HeaderInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.PadUtils;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import ir.saeiddrv.iso8583.message.utilities.Validator;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class TPDUHeaderInterpreter implements HeaderInterpreter {
@@ -85,5 +87,15 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
                 .put(destinationAddress)
                 .array();
         return TypeUtils.encodeBytes(pack, charset);
+    }
+
+    @Override
+    public UnpackContentResult unpack(byte[] message,
+                                      int offset,
+                                      Charset charset) {
+        int endOffset = offset + 5;
+        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
+        byte[] unpack = TypeUtils.encodeBytes(pack, charset);
+        return new UnpackContentResult(unpack, endOffset);
     }
 }

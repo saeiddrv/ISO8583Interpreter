@@ -1,10 +1,12 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
-import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
 import ir.saeiddrv.iso8583.message.interpreters.base.MessageLengthInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
 
@@ -14,7 +16,7 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
     }
 
     @Override
-    public byte[] pack(int count, int messageBytesLength, Charset charset) throws ISOException {
+    public byte[] pack(int count, int messageBytesLength, Charset charset) throws ISO8583Exception {
         if (count > 0) {
 
             String lengthHex = Integer.toHexString(messageBytesLength);
@@ -22,7 +24,7 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
             int lengthBytesCount = lengthBytes.length;
 
             if (lengthBytesCount > count)
-                throw new ISOException("The length count of the generated message " +
+                throw new ISO8583Exception("The length count of the generated message " +
                         "(%s: %s bytes in HEX) is greater than the specified length (%s).",
                         messageBytesLength, lengthBytesCount, count);
 
@@ -33,5 +35,17 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
         } else {
             return new byte[0]; // WITHOUT LENGTH
         }
+    }
+
+    @Override
+    public UnpackLengthResult unpack(byte[] message,
+                                     int offset,
+                                     int count,
+                                     Charset charset) throws ISO8583Exception {
+        int endOffset = offset + count;
+        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
+        byte[] unpack = TypeUtils.encodeBytes(pack, charset);
+        int length =  Integer.parseInt(TypeUtils.byteArrayToHexString(unpack), 16);
+        return new UnpackLengthResult(length, endOffset);
     }
 }

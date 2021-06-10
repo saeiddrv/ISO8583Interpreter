@@ -1,6 +1,7 @@
 package ir.saeiddrv.iso8583.message;
 
 import ir.saeiddrv.iso8583.message.interpreters.base.HeaderInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import java.nio.charset.Charset;
 
 public class Header {
@@ -21,6 +22,10 @@ public class Header {
 
     public byte[] pack(Charset charset) {
         return interpreter.pack(charset);
+    }
+
+    public UnpackContentResult unpack(byte[] message, int offset, Charset charset) {
+        return interpreter.unpack(message, offset, charset);
     }
 
     @Override

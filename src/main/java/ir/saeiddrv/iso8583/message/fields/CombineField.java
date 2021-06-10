@@ -1,7 +1,8 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.Range;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
@@ -117,11 +118,12 @@ public class CombineField implements Field {
 
     @Override
     public void clear() {
-        fields.clear();
+        for (int fieldNumber : getFieldNumbers())
+            fields.get(fieldNumber).clear();
     }
 
     @Override
-    public byte[] pack() throws ISOException {
+    public byte[] pack() throws ISO8583Exception {
         try {
             setBitmaps();
             // START FIELD PACKING, CREATE PACK BUFFER
@@ -140,7 +142,28 @@ public class CombineField implements Field {
             return finalBuffer.toByteArray();
 
         } catch (Exception exception) {
-            throw new ISOException("FIELD[%s]: %s", number, exception.getMessage());
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
+    }
+
+    @Override
+    public int unpack(byte[] message, int offset) throws ISO8583Exception {
+        try {
+            // UNPACK LENGTH
+            if (length.hasInterpreter()) {
+                UnpackLengthResult unpackLength = length.unpack(message, offset, number, charset);
+                if (unpackLength != null)
+                    offset = unpackLength.getNextOffset();
+            }
+
+            // UNPACK INNER FIELDS
+            for (int fieldNumber : getFieldNumbers())
+                offset = fields.get(fieldNumber).unpack(message, offset);
+
+            return offset;
+
+        } catch (Exception exception) {
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
         }
     }
 

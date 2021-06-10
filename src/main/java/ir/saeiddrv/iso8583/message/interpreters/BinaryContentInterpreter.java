@@ -1,11 +1,13 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
-import ir.saeiddrv.iso8583.message.ISOException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import ir.saeiddrv.iso8583.message.fields.ContentPad;
 import ir.saeiddrv.iso8583.message.fields.LengthValue;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class BinaryContentInterpreter implements ContentInterpreter {
 
@@ -29,7 +31,7 @@ public class BinaryContentInterpreter implements ContentInterpreter {
                        LengthValue length,
                        byte[] value,
                        ContentPad pad,
-                       Charset charset) throws ISOException {
+                       Charset charset) throws ISO8583Exception {
 
         int valueLength = value.length;
         int fixedLength = length.getMaximumValue();
@@ -38,9 +40,22 @@ public class BinaryContentInterpreter implements ContentInterpreter {
             value = pad.doPad(value, fixedLength);
 
         if (valueLength > fixedLength)
-            throw new ISOException("FIELD[%d] length (%s) is larger than of defined length (%s).",
+            throw new ISO8583Exception("FIELD[%d] length (%s) is larger than of defined length (%s).",
                     valueLength, fixedLength, fieldNumber);
 
         return TypeUtils.encodeBytes(value, charset);
+    }
+
+    @Override
+    public UnpackContentResult unpack(byte[] message,
+                                      int offset,
+                                      int fieldNumber,
+                                      int length,
+                                      ContentPad pad,
+                                      Charset charset) throws ISO8583Exception {
+        int endOffset = offset + length;
+        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
+        byte[] unpack = TypeUtils.encodeBytes(pack, charset);
+        return new UnpackContentResult(unpack, endOffset);
     }
 }
