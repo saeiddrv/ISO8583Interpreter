@@ -295,14 +295,12 @@ public class Message {
                 UnpackLengthResult unpackMessageLength =
                         lengthInterpreter.unpack(packMessage, offset, lengthCount, charset);
                 offset = unpackMessageLength.getNextOffset();
-                System.out.println("unpackMessageLength: " + unpackMessageLength.getValue());
             }
 
             // UNPACK HEADER (IF EXIST)
             if (header != null) {
                 UnpackContentResult unpackHeader = header.unpack(packMessage, offset, charset);
                 offset = unpackHeader.getNextOffset();
-                System.out.println("unpackHeader: " + TypeUtils.bcdBytesToText(unpackHeader.getValue()));
             }
 
             // UNPACK MTI (IF EXIST)
@@ -311,7 +309,6 @@ public class Message {
                 int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
                 setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
                 offset = unpackMTI.getNextOffset();
-                System.out.println("unpackMTI: " + unpackMTI.getValue());
             }
 
             // UNPACK ALL AVAILABLE FIELDS
@@ -319,7 +316,6 @@ public class Message {
                 Field field = fields.get(fieldNumber);
                 field.clear();
                 offset = field.unpack(packMessage, offset);
-                System.out.println(field);
             }
 
             return this;

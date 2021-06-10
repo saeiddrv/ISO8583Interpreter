@@ -112,9 +112,10 @@ public class Main {
             byte[] pack = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(pack));
 
-            System.out.println("=========================================");
+            System.out.println("==================== UNPACK ====================");
 
             message = builder.unpackMessage(pack);
+            message.printObject(System.out);
             byte[] packAgain = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(packAgain));
 
