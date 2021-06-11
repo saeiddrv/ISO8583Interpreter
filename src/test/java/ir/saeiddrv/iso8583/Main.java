@@ -112,6 +112,8 @@ public class Main {
             byte[] pack = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(pack));
 
+            System.out.println(TypeUtils.hexDump(pack, StandardCharsets.ISO_8859_1));
+
             System.out.println("==================== UNPACK ====================");
 
             message = builder.unpackMessage(pack);
@@ -119,9 +121,11 @@ public class Main {
             byte[] packAgain = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(packAgain));
 
+            System.out.println(TypeUtils.hexDump(packAgain, StandardCharsets.ISO_8859_1));
+
             System.out.println("==================== SEND ====================");
 
-//            Client.send(packAgain);
+            Client.send(packAgain);
 
         } catch (ISO8583Exception ex) {
             ex.printStackTrace();

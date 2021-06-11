@@ -27,7 +27,7 @@ public class MTI {
         return interpreter;
     }
 
-    public void clear() {
+    void clear() {
         this.value = new int[0];
     }
 

@@ -2,8 +2,10 @@ package ir.saeiddrv.iso8583.message.utilities;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Locale;
 import java.util.stream.IntStream;
 
 public final class TypeUtils {
@@ -157,5 +159,32 @@ public final class TypeUtils {
             if ((bytes[i >> 3] & 0x80 >> i % 8) > 0)
                 bitSet.set(i);
         return bitSet;
+    }
+
+    // Source: https://gist.github.com/jen20/906db194bd97c14d91df
+    public static String hexDump(byte[] array, Charset charset) {
+        final int width = 16;
+        StringBuilder builder = new StringBuilder();
+
+        for (int rowOffset = 0; rowOffset < array.length; rowOffset += width) {
+            builder.append(String.format(Locale.ENGLISH, "%06d:  ", rowOffset));
+
+            for (int index = 0; index < width; index++) {
+                if (rowOffset + index < array.length)
+                    builder.append(String.format("%02X ", array[rowOffset + index]));
+                else
+                    builder.append("   ");
+            }
+
+            int asciiWidth = Math.min(width, array.length - rowOffset);
+            builder.append("  |  ");
+            builder.append(new String(array, rowOffset, asciiWidth, charset)
+                    .replaceAll("\r\n", " ")
+                    .replaceAll("\n", " "));
+
+            builder.append(String.format("%n"));
+        }
+
+        return builder.toString();
     }
 }

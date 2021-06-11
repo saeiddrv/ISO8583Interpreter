@@ -100,6 +100,31 @@ public class Message {
         return charset;
     }
 
+    public boolean hasLength() {
+        return lengthInterpreter != null;
+    }
+
+    public void unsetLength() {
+        setLengthInterpreter(null);
+        lengthCount = 0;
+    }
+
+    public int getLengthCount() {
+        return lengthCount;
+    }
+
+    public void unsetHeader() {
+        setHeader(null);
+    }
+
+    public Header getHeader() {
+        return header;
+    }
+
+    public boolean hasHeader() {
+        return header != null;
+    }
+
     public void changeMTI(String mtiLiteral) throws ISO8583Exception {
         if (hasMTI()) {
             if (Validator.mti(mtiLiteral)) {
@@ -124,12 +149,8 @@ public class Message {
         if (hasMTI()) mti.clear();
     }
 
-    public void unsetHeader() {
-        setHeader(null);
-    }
-
-    public Header getHeader() {
-        return header;
+    public void unsetMTI() {
+        mti = null;
     }
 
     public Field[] getFields() {
@@ -276,16 +297,11 @@ public class Message {
     }
 
     public void printObject(PrintStream printStream) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("-> DESCRIPTION: ").append(description).append("\n");
-        if (mti != null) builder.append("-> HEADER: ").append(header).append("\n");
-        else builder.append("-> HEADER: ").append("UNDEFINED").append("\n");
-        if (mti != null) builder.append("-> MTI: ").append(mti).append("\n");
-        else builder.append("-> MTI: ").append("UNDEFINED").append("\n");
-        for (int fieldNumber : getFieldNumbers(false))
-            builder.append("-> F[").append(String.format(Locale.ENGLISH, "%03d", fieldNumber))
-                    .append("]: ").append(fields.get(fieldNumber)).append("\n");
-        printStream.println(builder.toString());
+        printStream.println(toString());
+    }
+
+    public void printHexDump(PrintStream printStream) throws ISO8583Exception {
+        printStream.println(TypeUtils.hexDump(pack(), charset));
     }
 
     public byte[] pack() throws ISO8583Exception {
@@ -294,11 +310,11 @@ public class Message {
             ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
 
             // PACK HEADER (IF EXIST)
-            if (header != null)
+            if (hasHeader())
                 messageBuffer.write(header.pack(charset));
 
             // PACK MTI (IF EXIST)
-            if (mti != null)
+            if (hasMTI())
                 messageBuffer.write(mti.pack(charset));
 
             // PACK ALL AVAILABLE FIELDS
@@ -308,7 +324,7 @@ public class Message {
             // PACK MESSAGE LENGTH AND MERGE IT
             ByteArrayOutputStream finalPack = new ByteArrayOutputStream();
             byte[] messageBytes =  messageBuffer.toByteArray();
-            if (lengthInterpreter != null) {
+            if (hasLength()) {
                 byte[] messageLengthBytes = lengthInterpreter.pack(lengthCount, messageBytes.length, charset);
                 finalPack.write(messageLengthBytes);
             }
@@ -329,20 +345,20 @@ public class Message {
             int offset = 0;
 
             // UNPACK MESSAGE LENGTH (IF EXIST)
-            if (lengthInterpreter != null) {
+            if (hasLength()) {
                 UnpackLengthResult unpackMessageLength =
                         lengthInterpreter.unpack(packMessage, offset, lengthCount, charset);
                 offset = unpackMessageLength.getNextOffset();
             }
 
             // UNPACK HEADER (IF EXIST)
-            if (header != null) {
+            if (hasHeader()) {
                 UnpackContentResult unpackHeader = header.unpack(packMessage, offset, charset);
                 offset = unpackHeader.getNextOffset();
             }
 
             // UNPACK MTI (IF EXIST)
-            if (mti != null) {
+            if (hasMTI()) {
                 UnpackMTIResult unpackMTI = mti.unpack(packMessage, offset, charset);
                 int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
                 setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
@@ -362,5 +378,27 @@ public class Message {
             exception.printStackTrace();
             throw new ISO8583Exception("UNPACKING ERROR: %s", exception.getMessage());
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("-> DESCRIPTION: ").append(description).append("\n");
+
+        if (hasLength()) builder.append("-> LENGTH: ").append(getLengthCount()).append(" bytes").append("\n");
+        else builder.append("-> LENGTH: ").append("UNDEFINED").append("\n");
+
+        if (hasHeader()) builder.append("-> HEADER: ").append(header).append("\n");
+        else builder.append("-> HEADER: ").append("UNDEFINED").append("\n");
+
+        if (hasMTI()) builder.append("-> MTI   : ").append(mti).append("\n");
+        else builder.append("-> MTI   : ").append("UNDEFINED").append("\n");
+
+        for (int fieldNumber : getFieldNumbers(true))
+            builder.append("-> F[").append(String.format(Locale.ENGLISH, "%03d", fieldNumber))
+                    .append("]: ").append(fields.get(fieldNumber)).append("\n");
+
+        return builder.toString();
     }
 }
