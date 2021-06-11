@@ -6,10 +6,12 @@ import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackMTIResult;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
+import ir.saeiddrv.iso8583.message.utilities.Validator;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Message {
@@ -98,8 +100,28 @@ public class Message {
         return charset;
     }
 
+    public void changeMTI(String mtiLiteral) throws ISO8583Exception {
+        if (hasMTI()) {
+            if (Validator.mti(mtiLiteral)) {
+                int[] mtiArray = TypeUtils.numberStringToIntArray(mtiLiteral);
+                setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
+            } else throw new ISO8583Exception("[%s] Is an invalid value for ISO8583 MTI, " +
+                        "The message type indicator is a four-digit numeric field " +
+                        "which indicates the overall function of the message.", mtiLiteral);
+        }
+        else throw new ISO8583Exception("The MTI is not defined.");
+    }
+
     public MTI getMti() {
         return mti;
+    }
+
+    public boolean hasMTI() {
+        return mti != null;
+    }
+
+    public void clearMTI() {
+        if (hasMTI()) mti.clear();
     }
 
     public void unsetHeader() {
@@ -147,10 +169,16 @@ public class Message {
                 .toArray();
     }
 
-    public void ignoreFields(Integer... fieldNumbers) {
+    public void setIgnoreFieldNumbers(int... fieldNumbers) {
         ignoreFields.clear();
-        Collections.addAll(ignoreFields, fieldNumbers);
+        List<Integer> list = Arrays.stream(fieldNumbers).boxed().collect(Collectors.toList());
+        ignoreFields.addAll(list);
+
         setBitmaps();
+    }
+
+    public int[] getIgnoreFieldNumbers() {
+        return ignoreFields.stream().mapToInt(number -> number).toArray();
     }
 
     public void clearIgnoreFields() {
@@ -237,6 +265,16 @@ public class Message {
             fields.get(fieldNumber).clear();
     }
 
+    public void setFields(String[] fieldsValue) throws ISO8583Exception {
+        for (int i = 0; i < fieldsValue.length; i++)
+            setValue(i, fieldsValue[i]);
+    }
+
+    public void setFields(Map<Integer, String> fieldsValue) throws ISO8583Exception {
+        for (Map.Entry<Integer, String> entry: fieldsValue.entrySet())
+            setValue(entry.getKey(), entry.getValue());
+    }
+
     public void printObject(PrintStream printStream) {
         StringBuilder builder = new StringBuilder();
         builder.append("-> DESCRIPTION: ").append(description).append("\n");
@@ -281,7 +319,7 @@ public class Message {
 
         } catch (Exception exception) {
             exception.printStackTrace();
-            throw new ISO8583Exception("PACK ERROR: %s", exception.getMessage());
+            throw new ISO8583Exception("PACKING ERROR: %s", exception.getMessage());
         }
     }
 
@@ -322,7 +360,7 @@ public class Message {
 
         } catch (Exception exception) {
             exception.printStackTrace();
-            throw new ISO8583Exception("PACK ERROR: %s", exception.getMessage());
+            throw new ISO8583Exception("UNPACKING ERROR: %s", exception.getMessage());
         }
     }
 }
