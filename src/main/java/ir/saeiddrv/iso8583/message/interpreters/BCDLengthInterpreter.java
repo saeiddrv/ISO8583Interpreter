@@ -24,11 +24,17 @@ public class BCDLengthInterpreter implements LengthInterpreter {
 
         int lengthCount = length.getCount();
         if (lengthCount > 0) {
+            // Replace count with preferred in BCD coding
             int bcdLength = TypeUtils.findPreferredLengthInBCD(lengthCount);
+
+            // Setting pad
             String decimalLength = PadUtils.padLeft(String.valueOf(valueBytesLength), bcdLength * 2, '0');
 
-            byte[] pack = TypeUtils.textToBCDBytes(decimalLength);
-            return TypeUtils.encodeBytes(pack, charset);
+            // Encoding data with charset
+            byte[] data = TypeUtils.encodeBytes(decimalLength, charset);
+
+            // Packing data by BCD coding
+            return TypeUtils.byteArrayToBCD(data);
         } else {
             return new byte[0]; // FIXED LENGTH
         }
@@ -40,11 +46,18 @@ public class BCDLengthInterpreter implements LengthInterpreter {
                                      int fieldNumber,
                                      LengthValue length,
                                      Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
         int endOffset = offset + TypeUtils.findPreferredLengthInBCD(length.getCount());
+
+        // Copying the data related to this unit and encoding it with charset
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
         pack = TypeUtils.encodeBytes(pack, charset);
+
+        // Unpacking from BCD coding and cast to Integer
         String unpack = TypeUtils.bcdBytesToText(pack);
         int lengthNumber = Integer.parseInt(unpack);
+
+        // Creating result object
         return new UnpackLengthResult(lengthNumber, endOffset);
     }
 

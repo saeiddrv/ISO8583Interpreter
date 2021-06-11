@@ -18,12 +18,12 @@ public class ASCIIContentInterpreter implements ContentInterpreter {
 
     @Override
     public byte[] transfer(String value, Charset charset) {
-        return TypeUtils.textToByteArray(value);
+        return TypeUtils.encodeBytes(value, charset);
     }
 
     @Override
     public String transfer(byte[] value, Charset charset) {
-        return TypeUtils.byteArrayToText(value);
+        return TypeUtils.decodeBytes(value, charset);
     }
 
     @Override
@@ -32,7 +32,10 @@ public class ASCIIContentInterpreter implements ContentInterpreter {
                        byte[] value,
                        ContentPad pad,
                        Charset charset) {
+        // Packing data
         byte[] pack = TypeUtils.byteArrayToHexArray(value, charset);
+
+        // Encoding data with charset
         return TypeUtils.encodeBytes(pack, charset);
     }
 
@@ -43,11 +46,16 @@ public class ASCIIContentInterpreter implements ContentInterpreter {
                                       int length,
                                       ContentPad pad,
                                       Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
         int endOffset = offset + length;
+
+        // Copying the data related to this unit
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
-        pack = TypeUtils.encodeBytes(pack, charset);
-        String value = new String(pack, charset);
-        byte[] unpack = value.isEmpty() ? new byte[0] : TypeUtils.textToByteArray(value);
+
+        // Unpacking data
+        byte[] unpack = TypeUtils.encodeBytes(pack, charset);
+
+        // Creating result object
         return new UnpackContentResult(unpack, endOffset);
     }
 }

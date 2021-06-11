@@ -16,7 +16,7 @@ public final class TypeUtils {
         else return Math.floorDiv(length, 2) + 1;
     }
 
-    public static String textToPureNumber(String text) {
+    public static String stringToPureNumber(String text) {
         if (text == null || text.isEmpty()) return "";
         return text.replaceAll("[^\\d.]", "");
     }
@@ -25,7 +25,7 @@ public final class TypeUtils {
         if (numberString == null || numberString.isEmpty()) return new int[]{};
 
         return Arrays
-                .stream(textToPureNumber(numberString).split("(?<=.)"))
+                .stream(stringToPureNumber(numberString).split("(?<=.)"))
                 .mapToInt(Integer::parseInt)
                 .toArray();
     }
@@ -50,7 +50,7 @@ public final class TypeUtils {
         return (char) (int) (aByte);
     }
 
-    public static byte[] textToByteArray(String text) {
+    public static byte[] charSequenceToByteArray(String text) {
         if(text == null || text.isEmpty())
             throw new IllegalArgumentException("Invalid value (convert text to byte array): " + text);
 
@@ -58,15 +58,6 @@ public final class TypeUtils {
         for (int i =0; i < text.length(); i++)
             bytes[i] = charToByte(text.charAt(i));
         return bytes;
-    }
-
-    public static String byteArrayToText(byte[] bytes) {
-        if(bytes == null)
-            throw new IllegalArgumentException("Invalid value (convert byte array to string)");
-
-        StringBuilder builder = new StringBuilder();
-        for (byte aByte : bytes) builder.append(byteToChar(aByte));
-        return builder.toString();
     }
 
     public static byte byteToBCD(byte aByte) {
@@ -86,11 +77,6 @@ public final class TypeUtils {
             bcd[i] = (byte) (((j >= bytes.length) ? 0x00 : byteToBCD(bytes[j++])) + (bcd[i] << 4));
         }
         return bcd;
-    }
-
-    public static byte[] textToBCDBytes(String text) {
-        byte[] bytes = textToByteArray(text);
-        return byteArrayToBCD(bytes);
     }
 
     public static String bcdBytesToText(byte[] bytes) {

@@ -18,20 +18,22 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
     @Override
     public byte[] pack(int count, int messageBytesLength, Charset charset) throws ISO8583Exception {
         if (count > 0) {
+            // Length: Integer -> HEX -> byte[]
+            byte[] data = TypeUtils.hexStringToByteArray(Integer.toHexString(messageBytesLength));
 
-            String lengthHex = Integer.toHexString(messageBytesLength);
-            byte[] lengthBytes = TypeUtils.hexStringToByteArray(lengthHex);
-            int lengthBytesCount = lengthBytes.length;
-
-            if (lengthBytesCount > count)
+            // Checking count of the length bytes
+            int lengthCount = data.length;
+            if (lengthCount > count)
                 throw new ISO8583Exception("The length count of the generated message " +
                         "(%s: %s bytes in HEX) is greater than the specified length (%s).",
-                        messageBytesLength, lengthBytesCount, count);
+                        messageBytesLength, lengthCount, count);
 
-            byte[] pad = (count > lengthBytesCount) ? new byte[count - lengthBytesCount] : new byte[0];
+            // Setting left-pad by zero (if necessary)
+            byte[] padData = (count > lengthCount) ? new byte[count - lengthCount] : new byte[0];
+            data = ByteBuffer.allocate(count).put(padData).put(data).array();
 
-            byte[] pack = ByteBuffer.allocate(count).put(pad).put(lengthBytes).array();
-            return TypeUtils.encodeBytes(pack, charset);
+            // Encoding data with charset
+            return TypeUtils.encodeBytes(data, charset);
         } else {
             return new byte[0]; // WITHOUT LENGTH
         }
@@ -42,10 +44,17 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
                                      int offset,
                                      int count,
                                      Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
         int endOffset = offset + count;
-        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
-        byte[] unpack = TypeUtils.encodeBytes(pack, charset);
-        int length =  Integer.parseInt(TypeUtils.byteArrayToHexString(unpack), 16);
+
+        // Copying the data related to this unit and encoding it with charset
+        byte[] data = Arrays.copyOfRange(message, offset, endOffset);
+        data = TypeUtils.encodeBytes(data, charset);
+
+        // Length: byte[] -> HEX -> Integer
+        int length =  Integer.parseInt(TypeUtils.byteArrayToHexString(data), 16);
+
+        // Creating result object
         return new UnpackLengthResult(length, endOffset);
     }
 }

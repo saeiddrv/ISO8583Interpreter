@@ -21,6 +21,7 @@ public class BinaryBitmapInterpreter implements BitmapInterpreter {
 
     @Override
     public byte[] pack(Bitmap bitmap, Charset charset) throws ISO8583Exception {
+        // Encoding data with charset
         return TypeUtils.encodeBytes(bitmap.getValue(), charset);
     }
 
@@ -30,18 +31,26 @@ public class BinaryBitmapInterpreter implements BitmapInterpreter {
                                      int length,
                                      Range range,
                                      Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
         int endOffset = offset + length;
-        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
-        pack = TypeUtils.encodeBytes(pack, charset);
-        BitSet bitSet = TypeUtils.byteArray2BitSet(pack, length, range.getStart());
 
+        // Copying the data related to this unit and encoding it with charset
+        byte[] data = Arrays.copyOfRange(message, offset, endOffset);
+        data = TypeUtils.encodeBytes(data, charset);
+
+        // Creating bitset from bytes
+        BitSet bitSet = TypeUtils.byteArray2BitSet(data, length, range.getStart());
+
+        // Finding field numbers
         List<Integer> filedNumbers = new ArrayList<>();
         for (int i = 0; i < length * 8; i++)
             if (bitSet.get(i))
                 filedNumbers.add(i + range.getStart());
 
+        // fieldNumbers: List -> Array
         int[] fieldNumbers = filedNumbers.stream().mapToInt(number -> number).toArray();
 
+        // Creating result object
         return new UnpackBitmapResult(fieldNumbers, endOffset);
     }
 }

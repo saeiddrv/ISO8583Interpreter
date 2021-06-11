@@ -19,12 +19,12 @@ public class BCDContentInterpreter implements ContentInterpreter {
 
     @Override
     public byte[] transfer(String value, Charset charset) {
-        return TypeUtils.textToByteArray(value);
+        return TypeUtils.encodeBytes(value, charset);
     }
 
     @Override
     public String transfer(byte[] value, Charset charset) {
-        return TypeUtils.byteArrayToText(value);
+        return TypeUtils.decodeBytes(value, charset);
     }
 
     @Override
@@ -35,15 +35,18 @@ public class BCDContentInterpreter implements ContentInterpreter {
                        Charset charset) throws ISO8583Exception {
 
         int valueLength = value.length;
-        boolean hasOddLength = valueLength % 2 != 0;
 
-        if (hasOddLength) {
+        // Setting pad (if necessary)
+        if (valueLength % 2 != 0) {
             if (!pad.hasPadding())
                 throw new ISO8583Exception("FIELD[%d] length is odd and no pad have been set for it.", fieldNumber);
             value = pad.doPad(value, valueLength + 1);
         }
 
+        // Packing data by BCD coding
         byte[] pack = TypeUtils.byteArrayToBCD(value);
+
+        // Encoding data with charset
         return TypeUtils.encodeBytes(pack, charset);
     }
 
@@ -54,22 +57,26 @@ public class BCDContentInterpreter implements ContentInterpreter {
                                       int length,
                                       ContentPad pad,
                                       Charset charset) throws ISO8583Exception {
-        boolean hasOddLength = (length % 2) != 0;
 
-        int endOffset = offset + (length / 2);
-        if (hasOddLength && pad.hasPadding()) endOffset += 1;
+        // Finding the latest data position
+        int endOffset = offset + TypeUtils.findPreferredLengthInBCD(length);
 
+        // Copying the data related to this unit
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
+
+        // Unpacking from BCD coding
         String unpackText = TypeUtils.bcdBytesToText(pack);
         byte[] unpack = TypeUtils.encodeBytes(unpackText, charset);
 
-        if (hasOddLength)
+        // Undoing pad (if necessary)
+        if ((length % 2) != 0)
             if (pad.hasPadding())
                 if (pad.getPadDirection() == PadDirection.LEFT)
                     unpack = Arrays.copyOfRange(unpack, 1, unpack.length);
                 else if (pad.getPadDirection() == PadDirection.RIGHT)
                     unpack = Arrays.copyOfRange(unpack, 0, unpack.length - 1);
 
+        // Creating result object
         return new UnpackContentResult(unpack, endOffset);
     }
 }

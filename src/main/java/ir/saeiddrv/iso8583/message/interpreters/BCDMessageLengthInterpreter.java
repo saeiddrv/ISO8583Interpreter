@@ -18,13 +18,18 @@ public class BCDMessageLengthInterpreter implements MessageLengthInterpreter {
     @Override
     public byte[] pack(int count, int messageBytesLength, Charset charset) throws ISO8583Exception {
         if (count > 0) {
+            // Checking count of the length
             if (count % 2 != 0)
                 throw new ISO8583Exception("The message length count for BCD coding must be even.");
 
+            // Setting pad
             String decimalLength = PadUtils.padLeft(String.valueOf(messageBytesLength), count * 2, '0');
 
-            byte[] pack = TypeUtils.textToBCDBytes(decimalLength);
-            return TypeUtils.encodeBytes(pack, charset);
+            // Encoding data with charset
+            byte[] data = TypeUtils.encodeBytes(decimalLength, charset);
+
+            // Packing data by BCD coding
+            return TypeUtils.byteArrayToBCD(data);
         } else {
             return new byte[0]; // WITHOUT LENGTH
         }
@@ -35,11 +40,18 @@ public class BCDMessageLengthInterpreter implements MessageLengthInterpreter {
                                      int offset,
                                      int count,
                                      Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
         int endOffset = offset + count;
+
+        // Copying the data related to this unit and encoding it with charset
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
         pack = TypeUtils.encodeBytes(pack, charset);
+
+        // Unpacking from BCD coding and cast to Integer
         String unpack = TypeUtils.bcdBytesToText(pack);
         int length = Integer.parseInt(unpack);
+
+        // Creating result object
         return new UnpackLengthResult(length, endOffset);
     }
 }

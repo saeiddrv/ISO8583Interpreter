@@ -16,18 +16,28 @@ public class BCDMTIInterpreter implements MTIInterpreter {
 
     @Override
     public byte[] pack(String mti, Charset charset) {
-        byte[] pack = TypeUtils.textToBCDBytes(mti);
-        return TypeUtils.encodeBytes(pack, charset);
+        // Encoding data with charset
+        byte[] data =  TypeUtils.encodeBytes(mti, charset);
+
+        // Packing data by BCD coding
+        return TypeUtils.byteArrayToBCD(data);
     }
 
     @Override
     public UnpackMTIResult unpack(byte[] message,
                                   int offset,
                                   Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
         int endOffset = offset + 2;
-        byte[] pack = Arrays.copyOfRange(message, offset, offset + 2);
+
+        // Copying the data related to this unit and encoding it with charset
+        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
         pack = TypeUtils.encodeBytes(pack, charset);
-        String unpack =  TypeUtils.bcdBytesToText(pack);
+
+        // Unpacking from BCD coding
+        String unpack = TypeUtils.bcdBytesToText(pack);
+
+        // Creating result object
         return new UnpackMTIResult(unpack, endOffset);
     }
 }

@@ -23,7 +23,7 @@ public class Main {
             ISO8583 builder = ISO8583.create()
                     .setCharset(StandardCharsets.ISO_8859_1)
                     .setMessageLengthInterpreter(2, new HexMessageLengthInterpreter())
-                    .setHeaderInterpreter(TPDUHeaderInterpreter.formDecimal("60", "121", "121"))
+                    .setHeaderInterpreter(TPDUHeaderInterpreter.fromDecimal("60", "121", "121"))
                     .setMTI("0200", new BCDMTIInterpreter());
 
             builder.defineField(0,
@@ -118,6 +118,8 @@ public class Main {
             message.printObject(System.out);
             byte[] packAgain = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(packAgain));
+
+            System.out.println("==================== SEND ====================");
 
 //            Client.send(packAgain);
 
