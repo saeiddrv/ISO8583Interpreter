@@ -10,6 +10,8 @@ public interface HeaderInterpreter {
 
     public byte[] getValue();
 
+    public String getValueAsString();
+
     public byte[] pack(Charset charset) throws ISO8583Exception;
 
     public UnpackContentResult unpack(byte[] message,

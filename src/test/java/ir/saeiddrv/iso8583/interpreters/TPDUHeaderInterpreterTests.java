@@ -3,7 +3,6 @@ package ir.saeiddrv.iso8583.interpreters;
 import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.interpreters.TPDUHeaderInterpreter;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
-import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.nio.charset.Charset;
@@ -90,35 +89,35 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("CREATING (fromBytes) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromBytesAndValueToHexString() {
-        String actual = TypeUtils.byteArrayToHexString(fromBytes().getValue());
+        String actual = fromBytes().getValueAsString();
         assertEquals(expected, actual);
     }
 
     @Test
     @DisplayName("CREATING (fromHexInteger) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromHexIntegerAndValueToHexString() {
-        String actual = TypeUtils.byteArrayToHexString(fromHexInteger().getValue());
+        String actual = fromHexInteger().getValueAsString();
         assertEquals(expected, actual);
     }
 
     @Test
     @DisplayName("CREATING (fromInteger) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromIntegerAndValueToHexString() {
-        String actual = TypeUtils.byteArrayToHexString(fromInteger().getValue());
+        String actual = fromInteger().getValueAsString();
         assertEquals(expected, actual);
     }
 
     @Test
     @DisplayName("CREATING (fromHexString) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromHexStringAndValueToHexString() {
-        String actual = TypeUtils.byteArrayToHexString(fromHexString().getValue());
+        String actual = fromHexString().getValueAsString();
         assertEquals(expected, actual);
     }
 
     @Test
     @DisplayName("CREATING (fromDecimal) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromHDecimalAndValueToHexString() {
-        String actual = TypeUtils.byteArrayToHexString(fromDecimal().getValue());
+        String actual = fromDecimal().getValueAsString();
         assertEquals(expected, actual);
     }
 

@@ -12,12 +12,12 @@ public class Header {
         this.interpreter = interpreter;
     }
 
-    public HeaderInterpreter getInterpreter() {
-        return interpreter;
+    public byte[] getValue() {
+        return interpreter.getValue();
     }
 
-    public String getInterpreterName() {
-        return interpreter.getName();
+    public String getValueAsString() {
+        return interpreter.getValueAsString();
     }
 
     public byte[] pack(Charset charset) throws ISO8583Exception {
@@ -30,6 +30,6 @@ public class Header {
 
     @Override
     public String toString() {
-        return String.format("@Header[interpreter: %s]", getInterpreterName());
+        return String.format("@Header[value: %s, interpreter: %s]", getValueAsString(), interpreter.getName());
     }
 }

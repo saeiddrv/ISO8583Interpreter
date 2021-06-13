@@ -132,22 +132,22 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
 
     @Override
     public byte[] getValue() {
-        return new byte[] {
-                protocolID,
-                sourceAddress[0],
-                sourceAddress[1],
-                destinationAddress[0],
-                destinationAddress[1]};
-    }
-
-    @Override
-    public byte[] pack(Charset charset) throws ISO8583Exception {
         // Creating 5 bytes
-        byte[] data = ByteBuffer.allocate(5)
+        return ByteBuffer.allocate(5)
                 .put(protocolID)          // 1 byte
                 .put(sourceAddress)       // 2 bytes
                 .put(destinationAddress)  // 2 bytes
                 .array();
+    }
+
+    @Override
+    public String getValueAsString() {
+        return TypeUtils.byteArrayToHexString(getValue());
+    }
+
+    @Override
+    public byte[] pack(Charset charset) throws ISO8583Exception {
+        byte[] data = getValue();
 
         // Encoding data with charset
         return TypeUtils.encodeBytes(data, charset);
