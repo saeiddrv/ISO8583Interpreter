@@ -386,8 +386,11 @@ public class Message {
 
         builder.append("-> DESCRIPTION: ").append(description).append("\n");
 
-        if (hasLength()) builder.append("-> LENGTH: ").append(getLengthCount()).append(" bytes").append("\n");
-        else builder.append("-> LENGTH: ").append("UNDEFINED").append("\n");
+        if (hasLength()) {
+            String lengthString = String.format(Locale.ENGLISH,
+                    "[count: %s, interpreter: %s]", getLengthCount(), lengthInterpreter.getName());
+            builder.append("-> LENGTH: ").append(lengthString).append("\n");
+        } else builder.append("-> LENGTH: ").append("UNDEFINED").append("\n");
 
         if (hasHeader()) builder.append("-> HEADER: ").append(header).append("\n");
         else builder.append("-> HEADER: ").append("UNDEFINED").append("\n");

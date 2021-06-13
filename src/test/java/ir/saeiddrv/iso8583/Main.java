@@ -18,10 +18,10 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            byte protocolID = 0x60;                         // Decimal: 96
-            byte[] sourceAddress = new byte[] {0x01, 0x21};      // Decimal: 289
-            byte[] destinationAddress = new byte[] {0x01, 0x21}; // Decimal: 289
-            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromBytes(protocolID, sourceAddress, destinationAddress);
+//            byte protocolID = 0x60;                         // Decimal: 96
+//            byte[] sourceAddress = new byte[] {0x01, 0x21};      // Decimal: 289
+//            byte[] destinationAddress = new byte[] {0x01, 0x21}; // Decimal: 289
+//            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromBytes(protocolID, sourceAddress, destinationAddress);
 
 //            int protocolID = 0x60;
 //            int sourceAddress = 0x0121;
@@ -33,10 +33,10 @@ public class Main {
 //            String destinationAddress = "0121";
 //            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromDecimal(protocolID, sourceAddress, destinationAddress);
 //
-            System.out.println("getProtocolID: " + interpreter.getProtocolID());
-            System.out.println("getSourceAddress: " + interpreter.getSourceAddress());
-            System.out.println("getDestinationAddress: " + interpreter.getDestinationAddress());
-            System.out.println("value: " + TypeUtils.byteArrayToHexString(interpreter.getValue()));
+//            System.out.println("getProtocolID: " + interpreter.getProtocolID());
+//            System.out.println("getSourceAddress: " + interpreter.getSourceAddress());
+//            System.out.println("getDestinationAddress: " + interpreter.getDestinationAddress());
+//            System.out.println("value: " + TypeUtils.byteArrayToHexString(interpreter.getValue()));
 
             ISO8583 builder = ISO8583.create()
                     .setCharset(StandardCharsets.ISO_8859_1)
