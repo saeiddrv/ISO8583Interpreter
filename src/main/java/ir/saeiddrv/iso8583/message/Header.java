@@ -20,11 +20,11 @@ public class Header {
         return interpreter.getName();
     }
 
-    public byte[] pack(Charset charset) {
+    public byte[] pack(Charset charset) throws ISO8583Exception {
         return interpreter.pack(charset);
     }
 
-    public UnpackContentResult unpack(byte[] message, int offset, Charset charset) {
+    public UnpackContentResult unpack(byte[] message, int offset, Charset charset) throws ISO8583Exception {
         return interpreter.unpack(message, offset, charset);
     }
 

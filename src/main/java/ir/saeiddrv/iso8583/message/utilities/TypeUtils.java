@@ -187,4 +187,39 @@ public final class TypeUtils {
 
         return builder.toString();
     }
+
+    // Source: https://github.com/jpos/jPOS ISOUtil.java
+    public static byte[] intToByte(int value) {
+        if (value < 0) {
+            return new byte[]{(byte) (value >>> 24 & 0xFF), (byte) (value >>> 16 & 0xFF),
+                    (byte) (value >>> 8 & 0xFF), (byte) (value & 0xFF)};
+        } else if (value <= 0xFF) {
+            return new byte[]{(byte) (value & 0xFF)};
+        } else if (value <= 0xFFFF) {
+            return new byte[]{(byte) (value >>> 8 & 0xFF), (byte) (value & 0xFF)};
+        } else if (value <= 0xFFFFFF) {
+            return new byte[]{(byte) (value >>> 16 & 0xFF), (byte) (value >>> 8 & 0xFF),
+                    (byte) (value & 0xFF)};
+        } else {
+            return new byte[]{(byte) (value >>> 24 & 0xFF), (byte) (value >>> 16 & 0xFF),
+                    (byte) (value >>> 8 & 0xFF), (byte) (value & 0xFF)};
+        }
+    }
+
+    // Source: https://github.com/jpos/jPOS ISOUtil.java
+    public static int byteArrayToInt(byte[] bytes) {
+        if (bytes == null || bytes.length == 0)
+            return 0;
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+
+        for (int i = 0; i < 4 - bytes.length; i++)
+            byteBuffer.put((byte) 0);
+
+        for (byte aByte : bytes)
+            byteBuffer.put(aByte);
+
+        byteBuffer.position(0);
+        return byteBuffer.getInt();
+    }
 }

@@ -1,4 +1,4 @@
-package ir.saeiddrv.iso8583;
+package ir.saeiddrv.iso8583.interpreters;
 
 import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
