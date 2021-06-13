@@ -14,6 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TPDUHeaderInterpreterTests {
 
     private final Charset charset = StandardCharsets.ISO_8859_1;
+    private final String expected = "6001210121";
+    private final byte[] expectedBytes = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
 
     public TPDUHeaderInterpreter fromBytes() {
         byte protocolID = 0x60;                              // Decimal: 96
@@ -53,57 +55,41 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("CREATING OBJECT: fromBytes")
     public void assertEqualCreateFromBytes() {
-        // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
-
         byte[] actual = fromBytes().getValue();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
     @DisplayName("CREATING OBJECT: fromInteger (hex numbers)")
     public void assertEqualCreateFromHexInt() {
-        // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
-
         byte[] actual = fromHexInteger().getValue();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
     @DisplayName("CREATING OBJECT: fromInteger")
     public void assertEqualCreateFromInt() {
-        // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
-
         byte[] actual = fromInteger().getValue();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
     @DisplayName("CREATING OBJECT: fromHexString")
     public void assertEqualCreateFromHexString() {
-        // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
-
         byte[] actual = fromHexString().getValue();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
     @DisplayName("CREATING OBJECT: fromDecimal (BCD)")
     public void assertEqualCreateFromDecimalString() {
-        // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
-
         byte[] actual = fromDecimal().getValue();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
     @DisplayName("CREATING (fromBytes) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromBytesAndValueToHexString() {
-        String expected = "6001210121";
         String actual = TypeUtils.byteArrayToHexString(fromBytes().getValue());
         assertEquals(expected, actual);
     }
@@ -111,7 +97,6 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("CREATING (fromHexInteger) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromHexIntegerAndValueToHexString() {
-        String expected = "6001210121";
         String actual = TypeUtils.byteArrayToHexString(fromHexInteger().getValue());
         assertEquals(expected, actual);
     }
@@ -119,7 +104,6 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("CREATING (fromInteger) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromIntegerAndValueToHexString() {
-        String expected = "6001210121";
         String actual = TypeUtils.byteArrayToHexString(fromInteger().getValue());
         assertEquals(expected, actual);
     }
@@ -127,7 +111,6 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("CREATING (fromHexString) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromHexStringAndValueToHexString() {
-        String expected = "6001210121";
         String actual = TypeUtils.byteArrayToHexString(fromHexString().getValue());
         assertEquals(expected, actual);
     }
@@ -135,7 +118,6 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("CREATING (fromDecimal) & CONVERTING TO HEX-STRING: 6001210121")
     public void assertEqualCreateFromHDecimalAndValueToHexString() {
-        String expected = "6001210121";
         String actual = TypeUtils.byteArrayToHexString(fromDecimal().getValue());
         assertEquals(expected, actual);
     }
@@ -143,22 +125,19 @@ public class TPDUHeaderInterpreterTests {
     @Test
     @DisplayName("PACKING: 6001210121")
     public void assertEqualPack() throws ISO8583Exception {
-        // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
-
         byte[] actual = fromBytes().pack(charset);
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
     @DisplayName("UNPACKING: 6001210121")
     public void assertEqualUnPack() throws ISO8583Exception {
         // TPDU: 6001210121
-        byte[] expected = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
+        byte[] data = new byte[]{0x60, 0x01, 0x21, 0x01, 0x21};
 
-        UnpackContentResult result = fromBytes().unpack(expected, 0, charset);
+        UnpackContentResult result = fromBytes().unpack(data, 0, charset);
         byte[] actual = result.getValue();
-        assertArrayEquals(expected, actual);
+        assertArrayEquals(expectedBytes, actual);
     }
 
     @Test
