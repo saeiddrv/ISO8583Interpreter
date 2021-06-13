@@ -15,7 +15,7 @@ public class BCDMTIInterpreter implements MTIInterpreter {
     }
 
     @Override
-    public byte[] pack(String mti, Charset charset) {
+    public byte[] pack(String mti, Charset charset) throws ISO8583Exception {
         // Encoding data with charset
         byte[] data =  TypeUtils.encodeBytes(mti, charset);
 
@@ -29,6 +29,10 @@ public class BCDMTIInterpreter implements MTIInterpreter {
                                   Charset charset) throws ISO8583Exception {
         // Finding the latest data position
         int endOffset = offset + 2;
+
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, MTI: The received message length is less than the required amount. " +
+                    "[messageLength: %s]: [startIndex: %s, endIndex: %s]", message.length, offset, endOffset);
 
         // Copying the data related to this unit and encoding it with charset
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
