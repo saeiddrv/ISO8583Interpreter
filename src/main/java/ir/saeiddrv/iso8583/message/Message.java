@@ -39,6 +39,13 @@ public class Message {
         return true;
     }
 
+    private boolean isCombineValueOK(int fieldNumber, Object value) throws ISO8583Exception {
+        if (isValueOK(fieldNumber, value))
+            if (!isCombineField(fieldNumber))
+                throw new ISO8583Exception("The FIELD[%d] is not a CombineField.", fieldNumber);
+        return true;
+    }
+
     private BitmapField getBitmapField(BitmapType type) {
         for (BitmapField field : getBitmapFields())
             if (field.getBitmap().getType() == type) return field;
@@ -54,7 +61,7 @@ public class Message {
     void setBitmaps() {
         for (BitmapField field : getBitmapFields()) {
             Range bitmapRange = field.getBitmap().getRange();
-            field.setFieldNumbers(selectFieldNumbers(bitmapRange.getStart(), bitmapRange.getEnd(), true));
+            field.setFieldNumbers(rangeOfFieldNumbers(bitmapRange.getStart(), bitmapRange.getEnd(), true));
         }
     }
 
@@ -184,9 +191,9 @@ public class Message {
         return stream.sorted().toArray();
     }
 
-    public int[] selectFieldNumbers(int from, int to, boolean checkIgnores) {
+    public int[] rangeOfFieldNumbers(int start, int end, boolean checkIgnores) {
         return Arrays.stream(getFieldNumbers(checkIgnores)).
-                filter(number -> number >= from && number <= to)
+                filter(number -> number >= start && number <= end)
                 .toArray();
     }
 
@@ -252,14 +259,24 @@ public class Message {
     }
 
     public void setValue(int fieldNumber, byte[] value) throws ISO8583Exception {
-        if (isValueOK(fieldNumber, value)) {
+        if (isValueOK(fieldNumber, value))
             ((SingleField) fields.get(fieldNumber)).setValue(value);
-        }
     }
 
     public void setValue(int fieldNumber, String value) throws ISO8583Exception {
-        if (isValueOK(fieldNumber, value)) {
+        if (isValueOK(fieldNumber, value))
             ((SingleField) fields.get(fieldNumber)).setValue(value, charset);
+    }
+
+    public void setDeepValue(String fieldNumbers, byte[] value) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumbers)) {
+
+        }
+    }
+
+    public void setDeepValue(String fieldNumbers, String value) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumbers)) {
+
         }
     }
 

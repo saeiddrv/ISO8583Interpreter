@@ -24,6 +24,10 @@ public class CombineField implements Field {
             this.fields.put(field.getNumber(), field);
     }
 
+    public boolean hasSubField(int fieldNumber) {
+        return fields.containsKey(fieldNumber);
+    }
+
     public Field getSubField(int fieldNumber) {
         return fields.get(fieldNumber);
     }
