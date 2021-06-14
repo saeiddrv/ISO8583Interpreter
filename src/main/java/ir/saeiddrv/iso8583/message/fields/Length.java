@@ -47,14 +47,19 @@ public class Length {
         return value.isDefined();
     }
 
-    public byte[] pack(int fieldNumber, int valueBytesLength, Charset charset) throws ISO8583Exception {
+    public byte[] pack(int fieldNumber,
+                       int valueBytesLength,
+                       Charset charset) throws ISO8583Exception {
         if (hasInterpreter())
             return interpreter.pack(fieldNumber, value, valueBytesLength, charset);
         else
             return new byte[0];
     }
 
-    public UnpackLengthResult unpack(byte[] message, int offset, int fieldNumber, Charset charset) throws ISO8583Exception {
+    public UnpackLengthResult unpack(byte[] message,
+                                     int offset,
+                                     int fieldNumber,
+                                     Charset charset) throws ISO8583Exception {
         if (hasInterpreter())
             return interpreter.unpack(message, offset, fieldNumber, value, charset);
         else

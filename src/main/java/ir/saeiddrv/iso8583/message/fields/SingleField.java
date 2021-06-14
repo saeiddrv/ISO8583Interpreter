@@ -45,9 +45,9 @@ public class SingleField implements Field {
                 null,
                 LengthValue.create(0, maximumLength),
                 Objects.requireNonNull(contentInterpreter,
-                        "ContentInterpreter of FIELD[" + number + "] must not be null"),
+                        "'ContentInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(contentPad,
-                        "ContentPad of FIELD[" + number + "] must not be null"));
+                        "'ContentPad' of FIELD[" + number + "] cannot be set to null."));
     }
 
     public static SingleField create(int number,
@@ -57,13 +57,13 @@ public class SingleField implements Field {
                                      ContentPad contentPad) {
         return  new SingleField(number,
                 Objects.requireNonNull(lengthInterpreter,
-                        "LengthInterpreter of FIELD[" + number + "] must not be null"),
+                        "'LengthInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(lengthValue,
-                        "LengthValue of FIELD[" + number + "] must not be null"),
+                        "'LengthValue' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(contentInterpreter,
-                        "ContentInterpreter of FIELD[" + number + "] must not be null"),
+                        "'ContentInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(contentPad,
-                        "ContentPad of FIELD[" + number + "] must not be null"));
+                        "'ContentPad' of FIELD[" + number + "] cannot be set to null."));
     }
 
     public Length getLength() {

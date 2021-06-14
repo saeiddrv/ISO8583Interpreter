@@ -44,14 +44,20 @@ public class Content {
         return interpreter != null;
     }
 
-    public byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISO8583Exception {
+    public byte[] pack(int filedNumber,
+                       LengthValue length,
+                       Charset charset) throws ISO8583Exception {
         if (hasInterpreter())
             return interpreter.pack(filedNumber, length, value, pad, charset);
         else
             return value;
     }
 
-    public UnpackContentResult unpack(byte[] message, int offset, int filedNumber, int length, Charset charset) throws ISO8583Exception {
+    public UnpackContentResult unpack(byte[] message,
+                                      int offset,
+                                      int filedNumber,
+                                      int length,
+                                      Charset charset) throws ISO8583Exception {
         if (hasInterpreter())
             return interpreter.unpack(message, offset, filedNumber, length, pad, charset);
         else {

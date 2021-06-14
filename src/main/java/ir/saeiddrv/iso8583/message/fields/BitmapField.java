@@ -45,18 +45,18 @@ public class BitmapField implements Field {
 
     public static BitmapField create(int number, BitmapType type, Range range, int length) {
         return new BitmapField(number,
-                Objects.requireNonNull(type, "BitmapType of FIELD[" + number + "] must not be null"),
-                Objects.requireNonNull(range, "Range of FIELD[" + number + "] must not be null"),
+                Objects.requireNonNull(type, "'BitmapType' of FIELD[" + number + "] cannot be set to null."),
+                Objects.requireNonNull(range, "'Range' of FIELD[" + number + "] cannot be set to null."),
                 length,
                 new BinaryBitmapInterpreter());
     }
 
     public static BitmapField create(int number, BitmapType type, Range range, int length, BitmapInterpreter interpreter) {
         return new BitmapField(number,
-                Objects.requireNonNull(type, "BitmapType of FIELD[" + number + "] must not be null"),
-                Objects.requireNonNull(range, "Range of FIELD[" + number + "] must not be null"),
+                Objects.requireNonNull(type, "'BitmapType' of FIELD[" + number + "] cannot be set to null."),
+                Objects.requireNonNull(range, "'Range' of FIELD[" + number + "] cannot be set to null."),
                 length,
-                Objects.requireNonNull(interpreter, "BitmapInterpreter of FIELD[" + number + "] must not be null"));
+                Objects.requireNonNull(interpreter, "'BitmapInterpreter' of FIELD[" + number + "] cannot be set to null."));
     }
 
     private BitmapField(int number, BitmapType type, Range range, int length, BitmapInterpreter interpreter) {

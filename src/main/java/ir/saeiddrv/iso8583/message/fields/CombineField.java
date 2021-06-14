@@ -26,7 +26,7 @@ public class CombineField implements Field {
         this.length = new Length(lengthValue, lengthInterpreter);
         for (Field field : fields)
             this.fields.put(field.getNumber(), Objects.requireNonNull(field,
-                    "The FIELD[" + number + "] can not contains a null subfield."));
+                    "The FIELD[" + number + "] can not contain null subfields."));
     }
 
     public static CombineField create(int number,
@@ -37,7 +37,7 @@ public class CombineField implements Field {
         return new CombineField(number,
                 LengthValue.create(lengthCount, lengthMaximumValue),
                 Objects.requireNonNull(lengthInterpreter,
-                "LengthInterpreter of FIELD[" + number + "] must not be null"),
+                "'LengthInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 fields);
     }
 
@@ -47,9 +47,9 @@ public class CombineField implements Field {
                                       Field... fields) {
         return new CombineField(number,
                 Objects.requireNonNull(lengthValue,
-                        "LengthValue of FIELD[" + number + "] must not be null"),
+                        "'LengthValue' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(lengthInterpreter,
-                        "LengthInterpreter of FIELD[" + number + "] must not be null"),
+                        "'LengthInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 fields);
     }
 

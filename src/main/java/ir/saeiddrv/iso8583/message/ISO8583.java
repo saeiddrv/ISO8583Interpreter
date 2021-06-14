@@ -32,7 +32,8 @@ public class ISO8583 {
     }
 
     public static ISO8583 from(Message message) {
-        return new ISO8583(message);
+        return new ISO8583( Objects.requireNonNull(message,
+                "The 'Message' cannot be set to null."));
     }
 
     public ISO8583 setDescription(String description) {
@@ -99,13 +100,13 @@ public class ISO8583 {
     public ISO8583 defineField(int number, ShortcutField field) throws ISO8583Exception {
         if (isFieldNumberOK(number))
             message.addField(number, Objects.requireNonNull(field,
-                    "The 'Field'[" + number + "] cannot be set to null").toField(number));
+                    "The Field[" + number + "] cannot be set to null").toField(number));
         return this;
     }
 
     public ISO8583 reDefineField(int number, ShortcutField field) throws ISO8583Exception {
         message.replaceField(number, Objects.requireNonNull(field,
-                "The 'Field'[" + number + "] cannot be set to null").toField(number));
+                "The Field[" + number + "] cannot be set to null").toField(number));
         return this;
     }
 
