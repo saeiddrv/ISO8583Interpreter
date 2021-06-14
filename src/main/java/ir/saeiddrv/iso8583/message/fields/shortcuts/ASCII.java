@@ -4,7 +4,6 @@ import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.ASCIIContentInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.ASCIILengthInterpreter;
-
 import java.nio.charset.Charset;
 
 public class ASCII implements ShortcutField {
@@ -16,18 +15,18 @@ public class ASCII implements ShortcutField {
     private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
+    private ASCII(LengthType lengthType, int maximumLength, ContentPad contentPad) {
+        this.lengthType = lengthType;
+        this.maximumLength = maximumLength;
+        this.contentPad = contentPad;
+    }
+
     public static ASCII create(LengthType lengthType, int maximumLength) {
         return new ASCII(lengthType, maximumLength, ContentPad.NO_PADDING);
     }
 
     public static ASCII create(LengthType lengthType, int maximumLength, ContentPad contentPad) {
         return new ASCII(lengthType, maximumLength, contentPad);
-    }
-
-    private ASCII(LengthType lengthType, int maximumLength, ContentPad contentPad) {
-        this.lengthType = lengthType;
-        this.maximumLength = maximumLength;
-        this.contentPad = contentPad;
     }
 
     @Override

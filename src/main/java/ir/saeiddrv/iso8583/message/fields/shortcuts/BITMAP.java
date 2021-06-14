@@ -5,7 +5,6 @@ import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
-
 import java.nio.charset.Charset;
 
 public class BITMAP implements ShortcutField {
@@ -17,6 +16,13 @@ public class BITMAP implements ShortcutField {
     private Charset charset = null;
     private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
+
+    private BITMAP(BitmapType type, int length, Range range, BitmapInterpreter interpreter) {
+        this.type = type;
+        this.length = length;
+        this.range = range;
+        this.interpreter = interpreter;
+    }
 
     public static BITMAP create(BitmapType type, int length, Range range) {
         return new BITMAP(type, length, range, new BinaryBitmapInterpreter());
@@ -42,13 +48,6 @@ public class BITMAP implements ShortcutField {
     public ShortcutField setCharset(Charset charset) {
         this.charset = charset;
         return this;
-    }
-
-    private BITMAP(BitmapType type, int length, Range range, BitmapInterpreter interpreter) {
-        this.type = type;
-        this.length = length;
-        this.range = range;
-        this.interpreter = interpreter;
     }
 
     @Override

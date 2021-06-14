@@ -3,7 +3,6 @@ package ir.saeiddrv.iso8583.message.fields.shortcuts;
 import ir.saeiddrv.iso8583.message.fields.Field;
 import ir.saeiddrv.iso8583.message.fields.SingleField;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
-
 import java.nio.charset.Charset;
 
 public class RAW implements ShortcutField {
@@ -12,11 +11,11 @@ public class RAW implements ShortcutField {
     private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
+    private RAW() {}
+
     public static RAW create() {
         return new RAW();
     }
-
-    private RAW() {}
 
     @Override
     public ShortcutField setDescription(String description) {

@@ -4,7 +4,6 @@ import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.BCDContentInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.BCDLengthInterpreter;
-
 import java.nio.charset.Charset;
 
 public class BCD implements ShortcutField {
@@ -16,18 +15,18 @@ public class BCD implements ShortcutField {
     private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
+    private BCD(LengthType lengthType, int maximumLength, ContentPad contentPad) {
+        this.lengthType = lengthType;
+        this.maximumLength = maximumLength;
+        this.contentPad = contentPad;
+    }
+
     public static BCD create(LengthType lengthType, int maximumLength) {
         return new BCD(lengthType, maximumLength, ContentPad.NO_PADDING);
     }
 
     public static BCD create(LengthType lengthType, int maximumLength, ContentPad contentPad) {
         return new BCD(lengthType, maximumLength, contentPad);
-    }
-
-    private BCD(LengthType lengthType, int maximumLength, ContentPad contentPad) {
-        this.lengthType = lengthType;
-        this.maximumLength = maximumLength;
-        this.contentPad = contentPad;
     }
 
     @Override

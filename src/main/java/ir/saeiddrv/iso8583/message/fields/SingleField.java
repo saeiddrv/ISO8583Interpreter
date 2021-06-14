@@ -6,7 +6,6 @@ import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
-
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.util.Objects;
@@ -19,6 +18,16 @@ public class SingleField implements Field {
     private Charset charset = null;
     private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
+
+    private SingleField(int number,
+                        LengthInterpreter lengthInterpreter,
+                        LengthValue lengthValue,
+                        ContentInterpreter contentInterpreter,
+                        ContentPad contentPad) {
+        this.number = number;
+        this.length = new Length(lengthValue, lengthInterpreter);
+        this.content = new Content(contentInterpreter, contentPad);
+    }
 
     public static SingleField createRaw(int number) {
         return  new SingleField(number,
@@ -55,16 +64,6 @@ public class SingleField implements Field {
                         "ContentInterpreter of FIELD[" + number + "] must not be null"),
                 Objects.requireNonNull(contentPad,
                         "ContentPad of FIELD[" + number + "] must not be null"));
-    }
-
-    private SingleField(int number,
-                        LengthInterpreter lengthInterpreter,
-                        LengthValue lengthValue,
-                        ContentInterpreter contentInterpreter,
-                        ContentPad contentPad) {
-        this.number = number;
-        this.length = new Length(lengthValue, lengthInterpreter);
-        this.content = new Content(contentInterpreter, contentPad);
     }
 
     public Length getLength() {

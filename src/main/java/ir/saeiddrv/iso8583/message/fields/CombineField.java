@@ -2,6 +2,7 @@ package ir.saeiddrv.iso8583.message.fields;
 
 import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.Range;
+import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import java.io.ByteArrayOutputStream;
@@ -13,15 +14,47 @@ public class CombineField implements Field {
     private final int number;
     private final Length length;
     private final Map<Integer, Field> fields = new HashMap<>();
-    private Charset charset = null;
-    private ValueFormatter formatter = null;
+    private Charset charset;
+    private ValueFormatter formatter;
     private String description = "UNDEFINED";
 
-    public CombineField(int number, Length length, Field... fields) {
+    private CombineField(int number,
+                         LengthValue lengthValue,
+                         LengthInterpreter lengthInterpreter,
+                         Field... fields) {
         this.number = number;
-        this.length = length;
+        this.length = new Length(lengthValue, lengthInterpreter);
         for (Field field : fields)
-            this.fields.put(field.getNumber(), field);
+            this.fields.put(field.getNumber(), Objects.requireNonNull(field,
+                    "The FIELD[" + number + "] can not contains a null subfield."));
+    }
+
+    public static CombineField create(int number,
+                                      int lengthCount,
+                                      int lengthMaximumValue,
+                                      LengthInterpreter lengthInterpreter,
+                                      Field... fields) {
+        return new CombineField(number,
+                LengthValue.create(lengthCount, lengthMaximumValue),
+                Objects.requireNonNull(lengthInterpreter,
+                "LengthInterpreter of FIELD[" + number + "] must not be null"),
+                fields);
+    }
+
+    public static CombineField create(int number,
+                                      LengthValue lengthValue,
+                                      LengthInterpreter lengthInterpreter,
+                                      Field... fields) {
+        return new CombineField(number,
+                Objects.requireNonNull(lengthValue,
+                        "LengthValue of FIELD[" + number + "] must not be null"),
+                Objects.requireNonNull(lengthInterpreter,
+                        "LengthInterpreter of FIELD[" + number + "] must not be null"),
+                fields);
+    }
+
+    public static CombineField create(int number, Field... fields) {
+        return new CombineField(number, LengthValue.UNDEFINED, null, fields);
     }
 
     public boolean hasSubField(int fieldNumber) {
@@ -36,9 +69,9 @@ public class CombineField implements Field {
         return fields.keySet().stream().mapToInt(number -> number).sorted().toArray();
     }
 
-    public int[] selectFieldNumbers(int from, int to) {
+    public int[] rangeOfFieldNumbers(int start, int end) {
         return Arrays.stream(getFieldNumbers()).
-                filter(number -> number >= from && number <= to)
+                filter(number -> number >= start && number <= end)
                 .toArray();
     }
 
@@ -59,7 +92,7 @@ public class CombineField implements Field {
     private void setBitmaps() {
         for (BitmapField field : getBitmapFields()) {
             Range bitmapRange = field.getBitmap().getRange();
-            field.setFieldNumbers(selectFieldNumbers(bitmapRange.getStart(), bitmapRange.getEnd()));
+            field.setFieldNumbers(rangeOfFieldNumbers(bitmapRange.getStart(), bitmapRange.getEnd()));
         }
     }
 
@@ -154,11 +187,9 @@ public class CombineField implements Field {
     public int unpack(byte[] message, int offset) throws ISO8583Exception {
         try {
             // UNPACK LENGTH
-            if (length.hasInterpreter()) {
-                UnpackLengthResult unpackLength = length.unpack(message, offset, number, charset);
-                if (unpackLength != null)
-                    offset = unpackLength.getNextOffset();
-            }
+            UnpackLengthResult unpackLength = length.unpack(message, offset, number, charset);
+            if (unpackLength != null)
+                offset = unpackLength.getNextOffset();
 
             // UNPACK INNER FIELDS
             for (int fieldNumber : getFieldNumbers())
@@ -173,15 +204,15 @@ public class CombineField implements Field {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder fieldsString = new StringBuilder();
         for (Field field : fields.values())
-            stringBuilder.append("    ->").append(field.toString()).append("\n");
+            fieldsString.append("    ->").append(field.toString()).append("\n");
         return String.format("@CombineField[number: %s, value: %s, fieldCount: %s, charset: %s, description: %s, subFields:\n%s]",
                 number,
                 hasFormatter() ? getValueFormatted() : getValueAsString(),
                 fields.size(),
                 charset.displayName(),
                 description,
-                stringBuilder.toString());
+                fieldsString.toString());
     }
 }

@@ -4,7 +4,6 @@ import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.ASCIILengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.BCDContentInterpreter;
-
 import java.nio.charset.Charset;
 
 public class ASCIIBCD implements ShortcutField {
@@ -16,18 +15,18 @@ public class ASCIIBCD implements ShortcutField {
     private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
+    private ASCIIBCD(LengthType lengthType, int maximumLength, ContentPad contentPad) {
+        this.lengthType = lengthType;
+        this.maximumLength = maximumLength;
+        this.contentPad = contentPad;
+    }
+
     public static ASCIIBCD create(LengthType lengthType, int maximumLength) {
         return new ASCIIBCD(lengthType, maximumLength, ContentPad.NO_PADDING);
     }
 
     public static ASCIIBCD create(LengthType lengthType, int maximumLength, ContentPad contentPad) {
         return new ASCIIBCD(lengthType, maximumLength, contentPad);
-    }
-
-    private ASCIIBCD(LengthType lengthType, int maximumLength, ContentPad contentPad) {
-        this.lengthType = lengthType;
-        this.maximumLength = maximumLength;
-        this.contentPad = contentPad;
     }
 
     @Override

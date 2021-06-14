@@ -39,10 +39,13 @@ public class Message {
         return true;
     }
 
-    private boolean isCombineValueOK(int fieldNumber, Object value) throws ISO8583Exception {
-        if (isValueOK(fieldNumber, value))
-            if (!isCombineField(fieldNumber))
-                throw new ISO8583Exception("The FIELD[%d] is not a CombineField.", fieldNumber);
+    private boolean isValueOK(Field field, Object value) throws ISO8583Exception {
+        if (field instanceof BitmapField)
+            throw new ISO8583Exception("The FIELD[%d] is related to 'ISO Bitmap'. " +
+                    "The bitmap fields will set automatically.", field.getNumber());
+        if (value == null)
+            throw new ISO8583Exception("The contents of the field[%d] cannot be set to null. " +
+                    "You can use 'ignoreFields' method to ignore this field in pack process and bitmap.", field.getNumber());
         return true;
     }
 
@@ -56,6 +59,35 @@ public class Message {
         BitmapField field = getBitmapField(type);
         if (field != null) return field.getBitmap();
         else return null;
+    }
+
+    private Field findSubField(String fieldNumberSequence) throws ISO8583Exception {
+        int[] fieldNumbers = Arrays.stream(fieldNumberSequence.split("\\.")).mapToInt(Integer::parseInt).toArray();
+        int sequenceLength = fieldNumbers.length;
+        int parentNumber = fieldNumbers[0];
+
+        if (!hasField(parentNumber))
+            throw new ISO8583Exception("The FIELD[%d] is not defined.", parentNumber);
+
+        if (sequenceLength == 1) return fields.get(parentNumber);
+
+        if (!isCombineField(parentNumber))
+            throw new ISO8583Exception("The FIELD[%d] (parent of %s sequence) is not a CombineField.", parentNumber, fieldNumberSequence);
+
+        CombineField field = (CombineField) fields.get(parentNumber);
+        for (int index = 1; index < sequenceLength; index++) {
+            int fieldNumber = fieldNumbers[index];
+            if (field.hasSubField(fieldNumber)) {
+                Field subField = field.getSubField(fieldNumber);
+                if (subField instanceof CombineField) field = (CombineField) subField;
+                else if (index == sequenceLength - 1) return subField;
+                else throw new ISO8583Exception("The FIELD[%d]->FIELD[%d]->[...] (from %s sequence) must be a CombineField.",
+                            field.getNumber(), fieldNumber, fieldNumberSequence);
+            } else
+                throw new ISO8583Exception("The FIELD[%d]->FIELD[%d] (from %s sequence) is not defined.",
+                        field.getNumber(), fieldNumber, fieldNumberSequence);
+        }
+        throw new ISO8583Exception("The end field of %s sequence cannot be a CombineField.", fieldNumberSequence);
     }
 
     void setBitmaps() {
@@ -268,15 +300,17 @@ public class Message {
             ((SingleField) fields.get(fieldNumber)).setValue(value, charset);
     }
 
-    public void setDeepValue(String fieldNumbers, byte[] value) throws ISO8583Exception {
-        if (Validator.deepField(fieldNumbers)) {
-
+    public void setDeepValue(String fieldNumberSequence, byte[] value) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumberSequence)) {
+            Field field = findSubField(fieldNumberSequence);
+            if (isValueOK(field, value)) ((SingleField) field).setValue(value);
         }
     }
 
-    public void setDeepValue(String fieldNumbers, String value) throws ISO8583Exception {
-        if (Validator.deepField(fieldNumbers)) {
-
+    public void setDeepValue(String fieldNumberSequence, String value) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumberSequence)) {
+            Field field = findSubField(fieldNumberSequence);
+            if (isValueOK(field, value)) ((SingleField) field).setValue(value, charset);
         }
     }
 

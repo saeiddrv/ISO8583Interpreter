@@ -13,7 +13,7 @@ public class LengthValue {
                     "(LengthValue: 'count' must be a positive number): " + count);
         if (maximumValue < 0)
             throw new IllegalArgumentException("Invalid value " +
-                    "(LengthValue: 'maximumValue' must be a positive number): " + count);
+                    "(LengthValue: 'maximumValue' must be a positive number): " + maximumValue);
         return new LengthValue(count, maximumValue);
     }
 
