@@ -3,7 +3,7 @@ package ir.saeiddrv.iso8583.message.fields.shortcuts;
 import ir.saeiddrv.iso8583.message.Range;
 import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
-import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
+import ir.saeiddrv.iso8583.message.interpreters.BitmapBinaryInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
 import java.nio.charset.Charset;
 
@@ -25,7 +25,7 @@ public class BITMAP implements ShortcutField {
     }
 
     public static BITMAP create(BitmapType type, int length, Range range) {
-        return new BITMAP(type, length, range, new BinaryBitmapInterpreter());
+        return new BITMAP(type, length, range, new BitmapBinaryInterpreter());
     }
 
     static BITMAP create(BitmapType type, int length, Range range, BitmapInterpreter interpreter) {

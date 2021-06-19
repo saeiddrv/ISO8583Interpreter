@@ -161,8 +161,8 @@ public class TPDUHeaderInterpreter implements HeaderInterpreter {
         int endOffset = offset + 5;
 
         if (message.length < endOffset)
-            throw new ISO8583Exception("UNPACKING ERROR, HEADER(TPDU): The received message length is less than the required amount. " +
-                    "[messageLength: %s]: [startIndex: %s, endIndex: %s]", message.length, offset, endOffset);
+            throw new ISO8583Exception("UNPACKING ERROR, HEADER (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
 
         // Copying the data related to this unit and encode it with charset
         byte[] data = Arrays.copyOfRange(message, offset, endOffset);

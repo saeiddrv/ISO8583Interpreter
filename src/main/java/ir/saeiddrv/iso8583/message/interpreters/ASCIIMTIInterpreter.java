@@ -27,6 +27,10 @@ public class ASCIIMTIInterpreter implements MTIInterpreter {
         // Finding the latest data position
         int endOffset = offset + 4;
 
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, MTI (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
+
         // Copying the data related to this unit
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
 

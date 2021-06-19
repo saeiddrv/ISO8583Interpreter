@@ -4,7 +4,7 @@ import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.Range;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackBitmapResult;
 import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
-import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
+import ir.saeiddrv.iso8583.message.interpreters.BitmapBinaryInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.charset.Charset;
@@ -48,7 +48,7 @@ public class BitmapField implements Field {
                 Objects.requireNonNull(type, "'BitmapType' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(range, "'Range' of FIELD[" + number + "] cannot be set to null."),
                 length,
-                new BinaryBitmapInterpreter());
+                new BitmapBinaryInterpreter());
     }
 
     public static BitmapField create(int number, BitmapType type, Range range, int length, BitmapInterpreter interpreter) {

@@ -61,6 +61,10 @@ public class BCDContentInterpreter implements ContentInterpreter {
         // Finding the latest data position
         int endOffset = offset + TypeUtils.findPreferredLengthInBCD(length);
 
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, Content (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
+
         // Copying the data related to this unit
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
 

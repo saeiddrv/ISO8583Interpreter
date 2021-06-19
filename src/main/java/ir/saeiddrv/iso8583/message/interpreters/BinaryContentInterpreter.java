@@ -39,6 +39,9 @@ public class BinaryContentInterpreter implements ContentInterpreter {
         int valueLength = value.length;
 
         // Checking length of the data
+        if (!length.isFixed())
+            throw new ISO8583Exception("FIELD[%d] length must be fixed.", fieldNumber);
+
         int fixedLength = length.getMaximumValue();
         if (valueLength > fixedLength)
             throw new ISO8583Exception("FIELD[%d] length (%s) is larger than of defined length (%s).",
@@ -60,6 +63,10 @@ public class BinaryContentInterpreter implements ContentInterpreter {
                                       Charset charset) throws ISO8583Exception {
         // Finding the latest data position
         int endOffset = offset + length;
+
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, Content (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
 
         // Copying the data related to this unit and encoding it with charset
         byte[] data = Arrays.copyOfRange(message, offset, endOffset);

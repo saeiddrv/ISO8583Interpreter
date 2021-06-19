@@ -49,6 +49,10 @@ public class ASCIIContentInterpreter implements ContentInterpreter {
         // Finding the latest data position
         int endOffset = offset + length;
 
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, Content (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
+
         // Copying the data related to this unit
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
 

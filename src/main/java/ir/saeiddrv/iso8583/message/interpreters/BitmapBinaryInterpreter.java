@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 
-public class BinaryBitmapInterpreter implements BitmapInterpreter {
+public class BitmapBinaryInterpreter implements BitmapInterpreter {
 
     @Override
     public String getName() {
@@ -33,6 +33,10 @@ public class BinaryBitmapInterpreter implements BitmapInterpreter {
                                      Charset charset) throws ISO8583Exception {
         // Finding the latest data position
         int endOffset = offset + length;
+
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, Bitmap (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
 
         // Copying the data related to this unit and encoding it with charset
         byte[] data = Arrays.copyOfRange(message, offset, endOffset);

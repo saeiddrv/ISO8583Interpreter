@@ -43,6 +43,10 @@ public class BCDMessageLengthInterpreter implements MessageLengthInterpreter {
         // Finding the latest data position
         int endOffset = offset + count;
 
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, MessageLength (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
+
         // Copying the data related to this unit and encoding it with charset
         byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
         pack = TypeUtils.encodeBytes(pack, charset);
