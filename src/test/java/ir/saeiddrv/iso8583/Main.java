@@ -11,12 +11,22 @@ import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.HexMessageLengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.TPDUHeaderInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
+import ir.saeiddrv.iso8583.socket.Client;
+
 import java.nio.charset.StandardCharsets;
 
 public class Main {
 
     public static void main(String[] args) {
         try {
+//            byte protocolID = 0x60;
+//            byte wrong_protocolID = (byte) 0x21;
+//            byte[] sourceAddress = new byte[] {0x01, 0x21};
+//            byte[] wrong_sourceAddress = null;
+//            byte[] destinationAddress = new byte[] {0x01, 0x21};
+//            byte[] wrong_destinationAddress = new byte[] {(byte) 0x0121};
+
+//            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromBytes(wrong_protocolID, sourceAddress, destinationAddress);
 
 //            byte protocolID = 0x60;                         // Decimal: 96
 //            byte[] sourceAddress = new byte[] {0x01, 0x21};      // Decimal: 289
@@ -32,11 +42,12 @@ public class Main {
 //            String sourceAddress = "0121";
 //            String destinationAddress = "0121";
 //            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromDecimal(protocolID, sourceAddress, destinationAddress);
-//
+////
 //            System.out.println("getProtocolID: " + interpreter.getProtocolID());
 //            System.out.println("getSourceAddress: " + interpreter.getSourceAddress());
 //            System.out.println("getDestinationAddress: " + interpreter.getDestinationAddress());
 //            System.out.println("value: " + TypeUtils.byteArrayToHexString(interpreter.getValue()));
+//            System.out.println("pack: " +  TypeUtils.byteArrayToHexString(interpreter.pack(StandardCharsets.ISO_8859_1)));
 
             ISO8583 builder = ISO8583.create()
                     .setCharset(StandardCharsets.ISO_8859_1)
@@ -143,7 +154,7 @@ public class Main {
 
             System.out.println("==================== SEND ====================");
 
-//            Client.send(packAgain);
+            Client.send(packAgain);
 
         } catch (ISO8583Exception ex) {
             ex.printStackTrace();

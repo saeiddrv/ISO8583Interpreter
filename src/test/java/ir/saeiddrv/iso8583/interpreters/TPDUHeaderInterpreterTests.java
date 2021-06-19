@@ -141,9 +141,30 @@ public class TPDUHeaderInterpreterTests {
 
     @Test
     @DisplayName("UNPACKING: It should throw an exception when the message length is not long enough.")
-    public void assertThrowsUnPack() {
+    public void assertExceptionUnPack() {
         assertThrows(ISO8583Exception.class,
                 () -> fromBytes().unpack(new byte[]{0x60, 0x01}, 0, charset));
     }
 
+    @Test
+    @DisplayName("CREATING OBJECT, INPUT CHECKING (fromBytes): It should throw exceptions " +
+            "(IllegalArgumentException & NullPointerException) when invalid inputs are sent to the method")
+    public void assertExceptionsWithInvalidInputInCreateFromBytes() {
+        byte aByte = 0x60;
+        byte[] address = new byte[] {0x01, 0x21};
+        byte[] nullValue = null;
+
+        assertThrows(NullPointerException.class,
+                () -> TPDUHeaderInterpreter.fromBytes(aByte, nullValue, address));
+        assertThrows(IllegalArgumentException.class,
+                () -> TPDUHeaderInterpreter.fromBytes(aByte, new byte[0], address));
+        assertThrows(IllegalArgumentException.class,
+                () -> TPDUHeaderInterpreter.fromBytes(aByte, new byte[3], address));
+        assertThrows(NullPointerException.class,
+                () -> TPDUHeaderInterpreter.fromBytes(aByte, address, nullValue));
+        assertThrows(IllegalArgumentException.class,
+                () -> TPDUHeaderInterpreter.fromBytes(aByte, address, new byte[0]));
+        assertThrows(IllegalArgumentException.class,
+                () -> TPDUHeaderInterpreter.fromBytes(aByte, address, new byte[3]));
+    }
 }
