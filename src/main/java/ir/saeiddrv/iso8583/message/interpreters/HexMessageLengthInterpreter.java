@@ -47,6 +47,10 @@ public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
         // Finding the latest data position
         int endOffset = offset + count;
 
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, MessageLength(HEX): The received message length is less than the required amount. " +
+                    "[messageLength: %s]: [startIndex: %s, endIndex: %s]", message.length, offset, endOffset);
+
         // Copying the data related to this unit and encoding it with charset
         byte[] data = Arrays.copyOfRange(message, offset, endOffset);
         data = TypeUtils.encodeBytes(data, charset);
