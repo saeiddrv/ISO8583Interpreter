@@ -3,51 +3,20 @@ package ir.saeiddrv.iso8583;
 import ir.saeiddrv.iso8583.message.*;
 import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.MaskCardNumber;
-import ir.saeiddrv.iso8583.message.fields.shortcuts.BCD;
-import ir.saeiddrv.iso8583.message.fields.shortcuts.BCDASCII;
-import ir.saeiddrv.iso8583.message.fields.shortcuts.BINARY;
-import ir.saeiddrv.iso8583.message.fields.shortcuts.BITMAP;
+import ir.saeiddrv.iso8583.message.fields.shortcuts.*;
 import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.HexMessageLengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.TPDUHeaderInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import ir.saeiddrv.iso8583.socket.Client;
-
 import java.nio.charset.StandardCharsets;
 
 public class Main {
 
     public static void main(String[] args) {
         try {
-//            byte protocolID = 0x60;
-//            byte wrong_protocolID = (byte) 0x21;
-//            byte[] sourceAddress = new byte[] {0x01, 0x21};
-//            byte[] wrong_sourceAddress = null;
-//            byte[] destinationAddress = new byte[] {0x01, 0x21};
-//            byte[] wrong_destinationAddress = new byte[] {(byte) 0x0121};
 
-//            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromBytes(wrong_protocolID, sourceAddress, destinationAddress);
-
-//            byte protocolID = 0x60;                         // Decimal: 96
-//            byte[] sourceAddress = new byte[] {0x01, 0x21};      // Decimal: 289
-//            byte[] destinationAddress = new byte[] {0x01, 0x21}; // Decimal: 289
-//            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromBytes(protocolID, sourceAddress, destinationAddress);
-
-//            int protocolID = 0x60;
-//            int sourceAddress = 0x0121;
-//            int destinationAddress = 0x0121;
-//            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromInteger(protocolID, sourceAddress, destinationAddress);
-
-//            String protocolID = "60";
-//            String sourceAddress = "0121";
-//            String destinationAddress = "0121";
-//            TPDUHeaderInterpreter interpreter = TPDUHeaderInterpreter.fromDecimal(protocolID, sourceAddress, destinationAddress);
-////
-//            System.out.println("getProtocolID: " + interpreter.getProtocolID());
-//            System.out.println("getSourceAddress: " + interpreter.getSourceAddress());
-//            System.out.println("getDestinationAddress: " + interpreter.getDestinationAddress());
-//            System.out.println("value: " + TypeUtils.byteArrayToHexString(interpreter.getValue()));
-//            System.out.println("pack: " +  TypeUtils.byteArrayToHexString(interpreter.pack(StandardCharsets.ISO_8859_1)));
+            // ==================== DEFINITION ====================
 
             ISO8583 builder = ISO8583.create()
                     .setCharset(StandardCharsets.ISO_8859_1)
@@ -96,6 +65,18 @@ public class Main {
                     BCD.create(LengthType.LL, 37, ContentPad.RIGHT_0)
                             .setDescription("Track-2 Data"));
 
+            builder.defineField(37,
+                    BCD.create(LengthType.FIXED, 12, ContentPad.RIGHT_0)
+                            .setDescription("Retrieval Reference Number"));
+
+            builder.defineField(38,
+                    ASCII.create(LengthType.FIXED, 6, ContentPad.RIGHT_0)
+                            .setDescription("Authorization Identification Response"));
+
+            builder.defineField(39,
+                    ASCII.create(LengthType.FIXED, 2, ContentPad.RIGHT_0)
+                            .setDescription("Response Code"));
+
             builder.defineField(41,
                     BCDASCII.create(LengthType.FIXED, 8, ContentPad.LEFT_0)
                             .setDescription("Card Acceptor Terminal Identification"));
@@ -111,6 +92,10 @@ public class Main {
             builder.defineField(52,
                     BINARY.create(8).setDescription("Personal Identification Number (PIN) Data"));
 
+            builder.defineField(54,
+                    BCDASCII.create(LengthType.LLL, 999, ContentPad.RIGHT_0)
+                            .setDescription("Additional Amounts"));
+
             builder.defineField(61,
                     BCDASCII.create(LengthType.LLL, 999, ContentPad.RIGHT_0)
                             .setDescription("Point of Service (POS) Data"));
@@ -118,7 +103,13 @@ public class Main {
             builder.defineField(64,
                     BINARY.create(8).setDescription("Message Authentication Code (MAC)"));
 
+            // ==================== BUILD A ISO-8583 MESSAGE OBJECT ====================
+
             Message message = builder.buildMessage();
+
+            // ==================== SET VALUES TO MESSAGE OBJECT ====================
+
+            System.out.println("\n==================== SET VALUES ====================\n");
 
             message.setValue(2, "6219861026599414");
             message.setValue(3, "000000");
@@ -138,23 +129,31 @@ public class Main {
 
             message.printObject(System.out);
 
+            System.out.println("\n==================== PACK ====================\n");
+
+            message.setIgnoreFieldNumbers(37, 39, 38, 54);
+            message.printObject(System.out);
             byte[] pack = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(pack));
-
             System.out.println(TypeUtils.hexDump(pack, StandardCharsets.ISO_8859_1));
 
-            System.out.println("==================== UNPACK ====================");
+            System.out.println("\n==================== UNPACK ====================\n");
 
             message = builder.unpackMessage(pack);
             message.printObject(System.out);
+
+            System.out.println("\n==================== PACK AGAIN ====================\n");
+
             byte[] packAgain = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(packAgain));
-
             System.out.println(TypeUtils.hexDump(packAgain, StandardCharsets.ISO_8859_1));
 
-            System.out.println("==================== SEND ====================");
+            System.out.println("\n==================== SEND ====================\n");
 
-            Client.send(packAgain);
+            byte[] response = Client.send(packAgain);
+            message = builder.unpackMessage(response, System.out);
+
+            System.out.println("\n==================== RESULT: " + message.getValueAsString(39) + " ====================\n");
 
         } catch (ISO8583Exception ex) {
             ex.printStackTrace();

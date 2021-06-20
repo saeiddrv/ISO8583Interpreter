@@ -203,6 +203,13 @@ public class Message {
                 .toArray(BitmapField[]::new);
     }
 
+    public int[] getBitmapFieldNumbers() {
+        return fields.values().stream()
+                .filter(field -> field instanceof BitmapField)
+                .mapToInt(Field::getNumber)
+                .toArray();
+    }
+
     public SingleField[] getSingleFields() {
         return fields.values().stream()
                 .filter(field -> field instanceof SingleField)
@@ -227,6 +234,14 @@ public class Message {
         return Arrays.stream(getFieldNumbers(checkIgnores)).
                 filter(number -> number >= start && number <= end)
                 .toArray();
+    }
+
+    public void setIgnoreFieldNumbers(boolean updateBitmap, int... fieldNumbers) {
+        ignoreFields.clear();
+        List<Integer> list = Arrays.stream(fieldNumbers).boxed().collect(Collectors.toList());
+        ignoreFields.addAll(list);
+
+        if (updateBitmap) setBitmaps();
     }
 
     public void setIgnoreFieldNumbers(int... fieldNumbers) {
@@ -337,6 +352,11 @@ public class Message {
             fields.get(fieldNumber).clear();
     }
 
+    public void clearAllValue(boolean checkIgnores) {
+        for(int fieldNumber : getFieldNumbers(checkIgnores))
+            fields.get(fieldNumber).clear();
+    }
+
     public void setFields(String[] fieldsValue) throws ISO8583Exception {
         for (int i = 0; i < fieldsValue.length; i++)
             setValue(i, fieldsValue[i]);
@@ -345,14 +365,6 @@ public class Message {
     public void setFields(Map<Integer, String> fieldsValue) throws ISO8583Exception {
         for (Map.Entry<Integer, String> entry: fieldsValue.entrySet())
             setValue(entry.getKey(), entry.getValue());
-    }
-
-    public void printObject(PrintStream printStream) {
-        printStream.println(toString());
-    }
-
-    public void printHexDump(PrintStream printStream) throws ISO8583Exception {
-        printStream.println(TypeUtils.hexDump(pack(), charset));
     }
 
     public byte[] pack() throws ISO8583Exception {
@@ -391,7 +403,13 @@ public class Message {
     }
 
     public Message unpack(byte[] packMessage) throws ISO8583Exception {
+        return unpack(packMessage, null);
+    }
+
+    public Message unpack(byte[] packMessage, PrintStream printStream) throws ISO8583Exception {
         try {
+            printDescription(printStream);
+
             // INIT OFFSET
             int offset = 0;
 
@@ -400,12 +418,14 @@ public class Message {
                 UnpackLengthResult unpackMessageLength =
                         lengthInterpreter.unpack(packMessage, offset, lengthCount, charset);
                 offset = unpackMessageLength.getNextOffset();
+                printLength(printStream);
             }
 
             // UNPACK HEADER (IF EXIST)
             if (hasHeader()) {
                 UnpackContentResult unpackHeader = header.unpack(packMessage, offset, charset);
                 offset = unpackHeader.getNextOffset();
+                printHeader(printStream);
             }
 
             // UNPACK MTI (IF EXIST)
@@ -414,13 +434,27 @@ public class Message {
                 int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
                 setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
                 offset = unpackMTI.getNextOffset();
+                printMTI(printStream);
             }
 
             // UNPACK ALL AVAILABLE FIELDS
-            for (int fieldNumber : getFieldNumbers(true)) {
-                Field field = fields.get(fieldNumber);
-                field.clear();
-                offset = field.unpack(packMessage, offset);
+            BitmapField[] bitmapFields = getBitmapFields();
+            for (BitmapField bitmapField : bitmapFields) {
+                bitmapField.clear();
+                offset = bitmapField.unpack(packMessage, offset);
+                printField(bitmapField.getNumber(), printStream);
+
+                for (int fieldNumber : bitmapField.getBitmap().getFiledNumbers()) {
+                    if (!hasField(fieldNumber))
+                        throw new ISO8583Exception("The FIELD[%d] is not defined.", fieldNumber);
+
+                    Field field = fields.get(fieldNumber);
+                    if (field instanceof BitmapField) continue;
+
+                    field.clear();
+                    offset = field.unpack(packMessage, offset);
+                    printField(fieldNumber, printStream);
+                }
             }
 
             return this;
@@ -431,28 +465,97 @@ public class Message {
         }
     }
 
-    @Override
-    public String toString() {
+    public void printDescription(PrintStream printStream) {
+        if (printStream != null) printStream.print(logDescription());
+    }
+
+    public String logDescription() {
+        return "-> DESCRIPTION: " + description + "\n";
+    }
+
+    public void printLength(PrintStream printStream) {
+        if (printStream != null) printStream.print(logLength());
+    }
+
+    public String logLength() {
         StringBuilder builder = new StringBuilder();
-
-        builder.append("-> DESCRIPTION: ").append(description).append("\n");
-
         if (hasLength()) {
             String lengthString = String.format(Locale.ENGLISH,
                     "[count: %s, interpreter: %s]", getLengthCount(), lengthInterpreter.getName());
             builder.append("-> LENGTH: ").append(lengthString).append("\n");
         } else builder.append("-> LENGTH: ").append("UNDEFINED").append("\n");
+        return builder.toString();
+    }
 
+    public void printHeader(PrintStream printStream) {
+        if (printStream != null) printStream.print(logHeader());
+    }
+
+    public String logHeader() {
+        StringBuilder builder = new StringBuilder();
         if (hasHeader()) builder.append("-> HEADER: ").append(header).append("\n");
         else builder.append("-> HEADER: ").append("UNDEFINED").append("\n");
+        return builder.toString();
+    }
 
+    public void printMTI(PrintStream printStream) {
+        if (printStream != null) printStream.print(logMTI());
+    }
+
+    public String logMTI() {
+        StringBuilder builder = new StringBuilder();
         if (hasMTI()) builder.append("-> MTI   : ").append(mti).append("\n");
         else builder.append("-> MTI   : ").append("UNDEFINED").append("\n");
+        return builder.toString();
+    }
 
+    public void printFields(PrintStream printStream, boolean checkIgnores) {
+        if (printStream != null) printStream.print(logFields(checkIgnores));
+    }
+
+    public String logFields(boolean checkIgnores) {
+        StringBuilder builder = new StringBuilder();
         for (int fieldNumber : getFieldNumbers(true))
+            builder.append(logField(fieldNumber));
+        return builder.toString();
+    }
+
+    public void printField(int fieldNumber, PrintStream printStream) {
+        if (printStream != null) printStream.print(logField(fieldNumber));
+    }
+
+    public String logField(int fieldNumber) {
+        StringBuilder builder = new StringBuilder();
+        if (hasField(fieldNumber))
             builder.append("-> F[").append(String.format(Locale.ENGLISH, "%03d", fieldNumber))
                     .append("]: ").append(fields.get(fieldNumber)).append("\n");
-
         return builder.toString();
+    }
+
+    public void printIgnoreFields(PrintStream printStream) {
+        if (printStream != null) printStream.print(logIgnoreFields());
+    }
+
+    public String logIgnoreFields() {
+        return "-> IGNORE FIELDS: " + Arrays.toString(ignoreFields.toArray()) + "\n";
+    }
+
+    public void printObject(PrintStream printStream) {
+        if (printStream != null) printStream.println(toString());
+    }
+
+    public void printHexDump(PrintStream printStream) throws ISO8583Exception {
+        if (printStream != null)
+            printStream.println(TypeUtils.hexDump(pack(), charset));
+    }
+
+    @Override
+    public String toString() {
+        return logDescription() +
+                logLength() +
+                logHeader() +
+                logMTI() +
+                logFields(false) +
+                logIgnoreFields();
     }
 }

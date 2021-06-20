@@ -6,6 +6,8 @@ import ir.saeiddrv.iso8583.message.fields.shortcuts.ShortcutField;
 import ir.saeiddrv.iso8583.message.interpreters.base.*;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import ir.saeiddrv.iso8583.message.utilities.Validator;
+
+import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
@@ -117,5 +119,9 @@ public class ISO8583 {
 
     public Message unpackMessage(byte[] packMessage) throws ISO8583Exception {
         return message.unpack(packMessage);
+    }
+
+    public Message unpackMessage(byte[] packMessage, PrintStream printStream) throws ISO8583Exception {
+        return message.unpack(packMessage, printStream);
     }
 }

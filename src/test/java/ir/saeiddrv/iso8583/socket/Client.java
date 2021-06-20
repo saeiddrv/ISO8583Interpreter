@@ -6,10 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 public class Client {
 
-    public static void send(byte[] data) {
+    public static byte[] send(byte[] data) {
         try {
             Socket socket = new Socket("46.36.103.1", 49999);
             socket.setSoTimeout(15000);
@@ -41,9 +42,15 @@ public class Client {
 
             System.out.println("message: " + TypeUtils.byteArrayToHexString(messageBytes));
 
+            return ByteBuffer.allocate(2 + messageLength)
+                    .put(messageLengthBytes)
+                    .put(messageBytes)
+                    .array();
+
 
         } catch (IOException e) {
             e.printStackTrace();
+            return new byte[0];
         }
     }
 
