@@ -90,6 +90,13 @@ public class Message {
         throw new ISO8583Exception("The end field of %s sequence cannot be a CombineField.", fieldNumberSequence);
     }
 
+    private void setIgnoreFieldsInUnpack(List<Integer> ignoreFields) {
+        int[] differences = IntStream.of(getFieldNumbers(false))
+                .filter(element -> !ignoreFields.contains(element))
+                .toArray();
+        setIgnoreFieldNumbers(differences);
+    }
+
     void setBitmaps() {
         for (BitmapField field : getBitmapFields()) {
             Range bitmapRange = field.getBitmap().getRange();
@@ -200,6 +207,7 @@ public class Message {
         return fields.values().stream()
                 .filter(field -> field instanceof BitmapField)
                 .map(field -> (BitmapField) field)
+                .sorted(Comparator.comparingInt(BitmapField::getNumber))
                 .toArray(BitmapField[]::new);
     }
 
@@ -214,6 +222,7 @@ public class Message {
         return fields.values().stream()
                 .filter(field -> field instanceof SingleField)
                 .map(field -> (SingleField) field)
+                .sorted(Comparator.comparingInt(SingleField::getNumber))
                 .toArray(SingleField[]::new);
     }
 
@@ -221,6 +230,7 @@ public class Message {
         return fields.values().stream()
                 .filter(field -> field instanceof CombineField)
                 .map(field -> (CombineField) field)
+                .sorted(Comparator.comparingInt(CombineField::getNumber))
                 .toArray(CombineField[]::new);
     }
 
@@ -438,10 +448,12 @@ public class Message {
             }
 
             // UNPACK ALL AVAILABLE FIELDS
+            List<Integer> fieldNumbers = new ArrayList<>();
             BitmapField[] bitmapFields = getBitmapFields();
             for (BitmapField bitmapField : bitmapFields) {
                 bitmapField.clear();
                 offset = bitmapField.unpack(packMessage, offset);
+                fieldNumbers.add(bitmapField.getNumber());
                 printField(bitmapField.getNumber(), printStream);
 
                 for (int fieldNumber : bitmapField.getBitmap().getFiledNumbers()) {
@@ -453,9 +465,13 @@ public class Message {
 
                     field.clear();
                     offset = field.unpack(packMessage, offset);
+                    fieldNumbers.add(fieldNumber);
                     printField(fieldNumber, printStream);
                 }
             }
+            setIgnoreFieldsInUnpack(fieldNumbers);
+
+            printIgnoreFields(printStream);
 
             return this;
 

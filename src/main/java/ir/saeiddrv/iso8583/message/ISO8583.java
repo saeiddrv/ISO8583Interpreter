@@ -118,10 +118,12 @@ public class ISO8583 {
     }
 
     public Message unpackMessage(byte[] packMessage) throws ISO8583Exception {
+        message.clearAllValue(false);
         return message.unpack(packMessage);
     }
 
     public Message unpackMessage(byte[] packMessage, PrintStream printStream) throws ISO8583Exception {
+        message.clearAllValue(false);
         return message.unpack(packMessage, printStream);
     }
 }
