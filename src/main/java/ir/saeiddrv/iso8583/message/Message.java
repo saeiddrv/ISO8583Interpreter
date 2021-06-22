@@ -24,7 +24,7 @@ public class Message {
     private Header header = null;
     private MTI mti = null;
     private String description = "UNDEFINED";
-    private final List<Integer> ignoreFields = new ArrayList<>();
+    private final List<Integer> skipFields = new ArrayList<>();
     private final Map<Integer, Field> fields = new HashMap<>();
 
     private boolean isValueOK(int fieldNumber, Object value) throws ISO8583Exception {
@@ -34,8 +34,8 @@ public class Message {
             throw new ISO8583Exception("The FIELD[%d] is related to 'ISO Bitmap'. " +
                     "The bitmap fields will set automatically.", fieldNumber);
         if (value == null)
-            throw new ISO8583Exception("The contents of the field[%d] cannot be set to null. " +
-                    "You can use 'ignoreFields' method to ignore this field in pack process and bitmap.", fieldNumber);
+            throw new ISO8583Exception("The content of the FIELD[%d] cannot be set to null. " +
+                    "You can use 'setSkipFields' method to skip from this field in pack process and bitmap generation.", fieldNumber);
         return true;
     }
 
@@ -44,8 +44,8 @@ public class Message {
             throw new ISO8583Exception("The FIELD[%d] is related to 'ISO Bitmap'. " +
                     "The bitmap fields will set automatically.", field.getNumber());
         if (value == null)
-            throw new ISO8583Exception("The contents of the field[%d] cannot be set to null. " +
-                    "You can use 'ignoreFields' method to ignore this field in pack process and bitmap.", field.getNumber());
+            throw new ISO8583Exception("The content of the FIELD[%d] cannot be set to null. " +
+                    "You can use 'setSkipFields' method to skip from this field in pack process and bitmap generation.", field.getNumber());
         return true;
     }
 
@@ -90,11 +90,11 @@ public class Message {
         throw new ISO8583Exception("The end field of %s sequence cannot be a CombineField.", fieldNumberSequence);
     }
 
-    private void setIgnoreFieldsInUnpack(List<Integer> ignoreFields) {
+    private void setSkipFieldsInUnpack(List<Integer> skipFields) {
         int[] differences = IntStream.of(getFieldNumbers(false))
-                .filter(element -> !ignoreFields.contains(element))
+                .filter(element -> !skipFields.contains(element))
                 .toArray();
-        setIgnoreFieldNumbers(differences);
+        setSkipFieldNumbers(differences);
     }
 
     void setBitmaps() {
@@ -234,40 +234,40 @@ public class Message {
                 .toArray(CombineField[]::new);
     }
 
-    public int[] getFieldNumbers(boolean checkIgnores) {
+    public int[] getFieldNumbers(boolean doSkipping) {
         IntStream stream = fields.keySet().stream().mapToInt(number -> number);
-        if (checkIgnores) stream = stream.filter(number -> !ignoreFields.contains(number));
+        if (doSkipping) stream = stream.filter(number -> !skipFields.contains(number));
         return stream.sorted().toArray();
     }
 
-    public int[] rangeOfFieldNumbers(int start, int end, boolean checkIgnores) {
-        return Arrays.stream(getFieldNumbers(checkIgnores)).
+    public int[] rangeOfFieldNumbers(int start, int end, boolean doSkipping) {
+        return Arrays.stream(getFieldNumbers(doSkipping)).
                 filter(number -> number >= start && number <= end)
                 .toArray();
     }
 
-    public void setIgnoreFieldNumbers(boolean updateBitmap, int... fieldNumbers) {
-        ignoreFields.clear();
+    public void setSkipFieldNumbers(boolean updateBitmap, int... fieldNumbers) {
+        skipFields.clear();
         List<Integer> list = Arrays.stream(fieldNumbers).boxed().collect(Collectors.toList());
-        ignoreFields.addAll(list);
+        skipFields.addAll(list);
 
         if (updateBitmap) setBitmaps();
     }
 
-    public void setIgnoreFieldNumbers(int... fieldNumbers) {
-        ignoreFields.clear();
+    public void setSkipFieldNumbers(int... fieldNumbers) {
+        skipFields.clear();
         List<Integer> list = Arrays.stream(fieldNumbers).boxed().collect(Collectors.toList());
-        ignoreFields.addAll(list);
+        skipFields.addAll(list);
 
         setBitmaps();
     }
 
-    public int[] getIgnoreFieldNumbers() {
-        return ignoreFields.stream().mapToInt(number -> number).toArray();
+    public int[] getSkipFieldNumbers() {
+        return skipFields.stream().mapToInt(number -> number).toArray();
     }
 
-    public void clearIgnoreFields() {
-        ignoreFields.clear();
+    public void clearSkipFields() {
+        skipFields.clear();
         setBitmaps();
     }
 
@@ -303,14 +303,14 @@ public class Message {
         return fields.get(fieldNumber) instanceof CombineField;
     }
 
-    public int getMinimumFieldNumber(boolean checkIgnores) {
-        int[] fieldNumbers = getFieldNumbers(checkIgnores);
+    public int getMinimumFieldNumber(boolean doSkipping) {
+        int[] fieldNumbers = getFieldNumbers(doSkipping);
         if (fieldNumbers.length > 0) return fieldNumbers[0];
         else return 0;
     }
 
-    public int getMaximumFieldNumber(boolean checkIgnores) {
-        int[] fieldNumbers = getFieldNumbers(checkIgnores);
+    public int getMaximumFieldNumber(boolean doSkipping) {
+        int[] fieldNumbers = getFieldNumbers(doSkipping);
         if (fieldNumbers.length > 0) return fieldNumbers[fieldNumbers.length - 1];
         else return 0;
     }
@@ -362,8 +362,8 @@ public class Message {
             fields.get(fieldNumber).clear();
     }
 
-    public void clearAllValue(boolean checkIgnores) {
-        for(int fieldNumber : getFieldNumbers(checkIgnores))
+    public void clearAllValue(boolean doSkipping) {
+        for(int fieldNumber : getFieldNumbers(doSkipping))
             fields.get(fieldNumber).clear();
     }
 
@@ -377,24 +377,26 @@ public class Message {
             setValue(entry.getKey(), entry.getValue());
     }
 
+    // Packing
+
     public byte[] pack() throws ISO8583Exception {
         try {
             // CREATE PACK BUFFER
             ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
 
-            // PACK HEADER (IF EXIST)
+            // PACKING HEADER (IF EXIST)
             if (hasHeader())
                 messageBuffer.write(header.pack(charset));
 
-            // PACK MTI (IF EXIST)
+            // PACKING MTI (IF EXIST)
             if (hasMTI())
                 messageBuffer.write(mti.pack(charset));
 
-            // PACK ALL AVAILABLE FIELDS
+            // PACKING ALL AVAILABLE FIELDS
             for (int fieldNumber : getFieldNumbers(true))
                 messageBuffer.write(fields.get(fieldNumber).pack());
 
-            // PACK MESSAGE LENGTH AND MERGE IT
+            // PACKING MESSAGE LENGTH AND MERGE IT
             ByteArrayOutputStream finalPack = new ByteArrayOutputStream();
             byte[] messageBytes =  messageBuffer.toByteArray();
             if (hasLength()) {
@@ -403,14 +405,15 @@ public class Message {
             }
             finalPack.write(messageBytes);
 
-            // FINISHED
+            // FINISH
             return finalPack.toByteArray();
 
         } catch (Exception exception) {
-            exception.printStackTrace();
             throw new ISO8583Exception("PACKING ERROR: %s", exception.getMessage());
         }
     }
+
+    // Unpacking
 
     public Message unpack(byte[] packMessage) throws ISO8583Exception {
         return unpack(packMessage, null);
@@ -423,7 +426,7 @@ public class Message {
             // INIT OFFSET
             int offset = 0;
 
-            // UNPACK MESSAGE LENGTH (IF EXIST)
+            // UNPACKING MESSAGE LENGTH (IF EXIST)
             if (hasLength()) {
                 UnpackLengthResult unpackMessageLength =
                         lengthInterpreter.unpack(packMessage, offset, lengthCount, charset);
@@ -431,14 +434,14 @@ public class Message {
                 printLength(printStream);
             }
 
-            // UNPACK HEADER (IF EXIST)
+            // UNPACKING HEADER (IF EXIST)
             if (hasHeader()) {
                 UnpackContentResult unpackHeader = header.unpack(packMessage, offset, charset);
                 offset = unpackHeader.getNextOffset();
                 printHeader(printStream);
             }
 
-            // UNPACK MTI (IF EXIST)
+            // UNPACKING MTI (IF EXIST)
             if (hasMTI()) {
                 UnpackMTIResult unpackMTI = mti.unpack(packMessage, offset, charset);
                 int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
@@ -447,8 +450,9 @@ public class Message {
                 printMTI(printStream);
             }
 
-            // UNPACK ALL AVAILABLE FIELDS
+            // UNPACKING ALL AVAILABLE FIELDS
             List<Integer> fieldNumbers = new ArrayList<>();
+
             BitmapField[] bitmapFields = getBitmapFields();
             for (BitmapField bitmapField : bitmapFields) {
                 bitmapField.clear();
@@ -469,91 +473,46 @@ public class Message {
                     printField(fieldNumber, printStream);
                 }
             }
-            setIgnoreFieldsInUnpack(fieldNumbers);
 
-            printIgnoreFields(printStream);
+            setSkipFieldsInUnpack(fieldNumbers);
+            printSkipFields(printStream);
 
+            // FINISH
             return this;
 
         } catch (Exception exception) {
-            exception.printStackTrace();
             throw new ISO8583Exception("UNPACKING ERROR: %s", exception.getMessage());
         }
     }
 
-    public void printDescription(PrintStream printStream) {
-        if (printStream != null) printStream.print(logDescription());
-    }
+    // Print objects to output
 
-    public String logDescription() {
-        return "-> DESCRIPTION: " + description + "\n";
+    public void printDescription(PrintStream printStream) {
+        if (printStream != null) printStream.print(descriptionToString());
     }
 
     public void printLength(PrintStream printStream) {
-        if (printStream != null) printStream.print(logLength());
-    }
-
-    public String logLength() {
-        StringBuilder builder = new StringBuilder();
-        if (hasLength()) {
-            String lengthString = String.format(Locale.ENGLISH,
-                    "[count: %s, interpreter: %s]", getLengthCount(), lengthInterpreter.getName());
-            builder.append("-> LENGTH: ").append(lengthString).append("\n");
-        } else builder.append("-> LENGTH: ").append("UNDEFINED").append("\n");
-        return builder.toString();
+        if (printStream != null) printStream.print(lengthToString());
     }
 
     public void printHeader(PrintStream printStream) {
-        if (printStream != null) printStream.print(logHeader());
-    }
-
-    public String logHeader() {
-        StringBuilder builder = new StringBuilder();
-        if (hasHeader()) builder.append("-> HEADER: ").append(header).append("\n");
-        else builder.append("-> HEADER: ").append("UNDEFINED").append("\n");
-        return builder.toString();
+        if (printStream != null) printStream.print(headerToString());
     }
 
     public void printMTI(PrintStream printStream) {
-        if (printStream != null) printStream.print(logMTI());
+        if (printStream != null) printStream.print(mtiToString());
     }
 
-    public String logMTI() {
-        StringBuilder builder = new StringBuilder();
-        if (hasMTI()) builder.append("-> MTI   : ").append(mti).append("\n");
-        else builder.append("-> MTI   : ").append("UNDEFINED").append("\n");
-        return builder.toString();
-    }
-
-    public void printFields(PrintStream printStream, boolean checkIgnores) {
-        if (printStream != null) printStream.print(logFields(checkIgnores));
-    }
-
-    public String logFields(boolean checkIgnores) {
-        StringBuilder builder = new StringBuilder();
-        for (int fieldNumber : getFieldNumbers(true))
-            builder.append(logField(fieldNumber));
-        return builder.toString();
+    public void printFields(PrintStream printStream, boolean doSkipping) {
+        if (printStream != null) printStream.print(fieldsToString(doSkipping));
     }
 
     public void printField(int fieldNumber, PrintStream printStream) {
-        if (printStream != null) printStream.print(logField(fieldNumber));
+        if (printStream != null) printStream.print(fieldToString(fieldNumber));
     }
 
-    public String logField(int fieldNumber) {
-        StringBuilder builder = new StringBuilder();
-        if (hasField(fieldNumber))
-            builder.append("-> F[").append(String.format(Locale.ENGLISH, "%03d", fieldNumber))
-                    .append("]: ").append(fields.get(fieldNumber)).append("\n");
-        return builder.toString();
-    }
-
-    public void printIgnoreFields(PrintStream printStream) {
-        if (printStream != null) printStream.print(logIgnoreFields());
-    }
-
-    public String logIgnoreFields() {
-        return "-> IGNORE FIELDS: " + Arrays.toString(ignoreFields.toArray()) + "\n";
+    public void printSkipFields(PrintStream printStream) {
+        if (printStream != null) printStream.print(skipFieldsToString());
     }
 
     public void printObject(PrintStream printStream) {
@@ -565,13 +524,65 @@ public class Message {
             printStream.println(TypeUtils.hexDump(pack(), charset));
     }
 
+    // Convert objects to string
+
+    public String descriptionToString() {
+        return "-> DESCRIPTION: " + description + "\n";
+    }
+
+    public String lengthToString() {
+        StringBuilder builder = new StringBuilder();
+        if (hasLength()) {
+            String lengthString = String.format(Locale.ENGLISH,
+                    "[count: %s, interpreter: %s]", getLengthCount(), lengthInterpreter.getName());
+            builder.append("-> LENGTH: ").append(lengthString).append("\n");
+        } else builder.append("-> LENGTH: ").append("UNDEFINED").append("\n");
+        return builder.toString();
+    }
+
+    public String headerToString() {
+        StringBuilder builder = new StringBuilder();
+        if (hasHeader()) builder.append("-> HEADER: ").append(header).append("\n");
+        else builder.append("-> HEADER: ").append("UNDEFINED").append("\n");
+        return builder.toString();
+    }
+
+    public String mtiToString() {
+        StringBuilder builder = new StringBuilder();
+        if (hasMTI()) builder.append("-> MTI   : ").append(mti).append("\n");
+        else builder.append("-> MTI   : ").append("UNDEFINED").append("\n");
+        return builder.toString();
+    }
+
+    public String fieldsToString(boolean doSkipping) {
+        StringBuilder builder = new StringBuilder();
+        for (int fieldNumber : getFieldNumbers(doSkipping))
+            builder.append(fieldToString(fieldNumber));
+        return builder.toString();
+    }
+
+    public String fieldToString(int fieldNumber) {
+        StringBuilder builder = new StringBuilder();
+        if (hasField(fieldNumber))
+            builder.append("-> F[")
+                    .append(String.format(Locale.ENGLISH, "%03d", fieldNumber))
+                    .append("]: ")
+                    .append(fields.get(fieldNumber))
+                    .append("\n");
+        return builder.toString();
+    }
+
+    public String skipFieldsToString() {
+        return "-> SKIPPING FIELDS: " + Arrays.toString(skipFields.toArray()) + "\n";
+    }
+
     @Override
     public String toString() {
-        return logDescription() +
-                logLength() +
-                logHeader() +
-                logMTI() +
-                logFields(false) +
-                logIgnoreFields();
+        return descriptionToString() +
+                lengthToString() +
+                headerToString() +
+                mtiToString() +
+                fieldsToString(false) +
+                skipFieldsToString();
     }
 }

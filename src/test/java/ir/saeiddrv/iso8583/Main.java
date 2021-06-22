@@ -131,7 +131,7 @@ public class Main {
 
             System.out.println("\n==================== PACK ====================\n");
 
-            message.setIgnoreFieldNumbers(37, 39, 38, 54);
+            message.setSkipFieldNumbers(37, 39, 38, 54);
             message.printObject(System.out);
             byte[] pack = message.pack();
             System.out.println(TypeUtils.bcdBytesToText(pack));

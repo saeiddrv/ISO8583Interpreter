@@ -6,7 +6,6 @@ import ir.saeiddrv.iso8583.message.fields.shortcuts.ShortcutField;
 import ir.saeiddrv.iso8583.message.interpreters.base.*;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import ir.saeiddrv.iso8583.message.utilities.Validator;
-
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.util.Objects;
