@@ -4,6 +4,7 @@ import ir.saeiddrv.iso8583.message.*;
 import ir.saeiddrv.iso8583.message.fields.*;
 import ir.saeiddrv.iso8583.message.fields.formatters.MaskCardNumber;
 import ir.saeiddrv.iso8583.message.fields.shortcuts.*;
+import ir.saeiddrv.iso8583.message.headers.TPDU;
 import ir.saeiddrv.iso8583.message.interpreters.BCDMTIInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.HexMessageLengthInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.TPDUHeaderInterpreter;
@@ -21,7 +22,7 @@ public class Main {
             ISO8583 builder = ISO8583.create()
                     .setCharset(StandardCharsets.ISO_8859_1)
                     .setMessageLengthInterpreter(2, new HexMessageLengthInterpreter())
-                    .setHeaderInterpreter(TPDUHeaderInterpreter.fromDecimal("60", "121", "121"))
+                    .setHeader(TPDU.fromDecimal("60", "121", "121"), new TPDUHeaderInterpreter())
                     .setMTI("0200", new BCDMTIInterpreter());
 
             builder.defineField(0,

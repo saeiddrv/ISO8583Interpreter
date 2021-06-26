@@ -3,6 +3,7 @@ package ir.saeiddrv.iso8583.message;
 import ir.saeiddrv.iso8583.message.fields.Field;
 import ir.saeiddrv.iso8583.message.fields.SingleField;
 import ir.saeiddrv.iso8583.message.fields.shortcuts.ShortcutField;
+import ir.saeiddrv.iso8583.message.headers.HeaderContent;
 import ir.saeiddrv.iso8583.message.interpreters.base.*;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import ir.saeiddrv.iso8583.message.utilities.Validator;
@@ -63,10 +64,12 @@ public class ISO8583 {
         return this;
     }
 
-    public ISO8583 setHeaderInterpreter(HeaderInterpreter interpreter) {
-        message.setHeader(new Header(
-                Objects.requireNonNull(interpreter,
-                        "The 'Header Interpreter' cannot be set to null.")));
+    public ISO8583 setHeader(HeaderContent content, HeaderInterpreter interpreter) {
+        Header header = new Header(
+                Objects.requireNonNull(content, "The 'HeaderContent' cannot be set to null."),
+                Objects.requireNonNull(interpreter, "The 'Header Interpreter' cannot be set to null."));
+        header.getContent().setCharset(message.getCharset());
+        message.setHeader(header);
         return this;
     }
 
@@ -74,7 +77,7 @@ public class ISO8583 {
                           MTIInterpreter interpreter) throws ISO8583Exception {
         if (Validator.mti(mtiLiteral)) {
             int[] mtiArray = TypeUtils.numberStringToIntArray(mtiLiteral);
-            message.setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3],
+            message.setMTI(new MTI(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3],
                     Objects.requireNonNull(interpreter, "The 'MTI Interpreter' cannot be set to null"))
             );
             return this;

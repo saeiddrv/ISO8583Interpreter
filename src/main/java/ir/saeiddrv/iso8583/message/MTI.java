@@ -10,11 +10,7 @@ public class MTI {
     private final MTIInterpreter interpreter;
     private int[] value;
 
-    static MTI create(int isoVersion, int messageClass, int messageFunction, int messageOrigin, MTIInterpreter interpreter) {
-        return new MTI(isoVersion, messageClass, messageFunction, messageOrigin, interpreter);
-    }
-
-    private MTI(int isoVersion, int messageClass, int messageFunction, int messageOrigin, MTIInterpreter interpreter) {
+    MTI(int isoVersion, int messageClass, int messageFunction, int messageOrigin, MTIInterpreter interpreter) {
         this.value = new int[4];
         this.value[0] = isoVersion;
         this.value[1] = messageClass;

@@ -175,7 +175,7 @@ public class Message {
         if (hasMTI()) {
             if (Validator.mti(mtiLiteral)) {
                 int[] mtiArray = TypeUtils.numberStringToIntArray(mtiLiteral);
-                setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
+                setMTI(new MTI(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
             } else throw new ISO8583Exception("[%s] Is an invalid value for ISO8583 MTI, " +
                         "The message type indicator is a four-digit numeric field " +
                         "which indicates the overall function of the message.", mtiLiteral);
@@ -445,7 +445,7 @@ public class Message {
             if (hasMTI()) {
                 UnpackMTIResult unpackMTI = mti.unpack(packMessage, offset, charset);
                 int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
-                setMTI(MTI.create(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
+                setMTI(new MTI(mtiArray[0], mtiArray[1], mtiArray[2], mtiArray[3], mti.getInterpreter()));
                 offset = unpackMTI.getNextOffset();
                 printMTI(printStream);
             }
@@ -515,21 +515,39 @@ public class Message {
         if (printStream != null) printStream.print(skipFieldsToString());
     }
 
+    /**
+     * Send String representation of the Message object to a specific output.
+     *
+     * @param printStream the intended output: <code>System.out</code>, <code>File</code>, ...
+     */
     public void printObject(PrintStream printStream) {
         if (printStream != null) printStream.println(toString());
     }
 
+    /**
+     * Send hexdump of the message to a specific output.
+     *
+     * @param printStream the intended output: <code>System.out</code>, <code>File</code>, ...
+     */
     public void printHexDump(PrintStream printStream) throws ISO8583Exception {
         if (printStream != null)
             printStream.println(TypeUtils.hexDump(pack(), charset));
     }
 
-    // Convert objects to string
-
+    /**
+     * Convert message description to log format.
+     *
+     * @return a representation of the message description in log format.
+     */
     public String descriptionToString() {
         return "-> DESCRIPTION: " + description + "\n";
     }
 
+    /**
+     * Convert length of the message object to String in log format.
+     *
+     * @return a string representation of the length of the message object in log format.
+     */
     public String lengthToString() {
         StringBuilder builder = new StringBuilder();
         if (hasLength()) {
@@ -540,6 +558,11 @@ public class Message {
         return builder.toString();
     }
 
+    /**
+     * Convert header object to String in log format.
+     *
+     * @return a string representation of the <code>Header</code> object in log format.
+     */
     public String headerToString() {
         StringBuilder builder = new StringBuilder();
         if (hasHeader()) builder.append("-> HEADER: ").append(header).append("\n");
@@ -547,6 +570,11 @@ public class Message {
         return builder.toString();
     }
 
+    /**
+     * Convert MTI object to String in log format.
+     *
+     * @return a string representation of the <code>MTI</code> object in log format.
+     */
     public String mtiToString() {
         StringBuilder builder = new StringBuilder();
         if (hasMTI()) builder.append("-> MTI   : ").append(mti).append("\n");
@@ -554,6 +582,13 @@ public class Message {
         return builder.toString();
     }
 
+    /**
+     * Convert all Field objects to String in log format.
+     *
+     * @param doSkipping <code>true</code>: skipping fields will not become
+     * @return a string representation of the all <code>Field</code> objects in log format.
+     *         each field will be present in a separate line.
+     */
     public String fieldsToString(boolean doSkipping) {
         StringBuilder builder = new StringBuilder();
         for (int fieldNumber : getFieldNumbers(doSkipping))
@@ -561,6 +596,12 @@ public class Message {
         return builder.toString();
     }
 
+    /**
+     * Convert Field object to String in log format.
+     *
+     * @param fieldNumber the intended field number
+     * @return a string representation of the a specific <code>Field</code> object in log format.
+     */
     public String fieldToString(int fieldNumber) {
         StringBuilder builder = new StringBuilder();
         if (hasField(fieldNumber))
@@ -572,10 +613,20 @@ public class Message {
         return builder.toString();
     }
 
+    /**
+     * Convert array of the skipping fields to String in log format.
+     *
+     * @return a string representation of the skipping fields in log format.
+     */
     public String skipFieldsToString() {
         return "-> SKIPPING FIELDS: " + Arrays.toString(skipFields.toArray()) + "\n";
     }
 
+    /**
+     * Convert Message object to String in log format.
+     *
+     * @return a string representation of the <code>Message</code> object in log format.
+     */
     @Override
     public String toString() {
         return descriptionToString() +
