@@ -20,6 +20,7 @@ public class Main {
             // ==================== DEFINITION ====================
 
             ISO8583 builder = ISO8583.create()
+                    .setDescription("")
                     .setCharset(StandardCharsets.ISO_8859_1)
                     .setMessageLengthInterpreter(2, new HexMessageLengthInterpreter())
                     .setHeader(TPDU.fromDecimal("60", "121", "121"), new TPDUHeaderInterpreter())
