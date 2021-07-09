@@ -528,6 +528,7 @@ public class Message {
      * Send hexdump of the message to a specific output.
      *
      * @param printStream the intended output: <code>System.out</code>, <code>File</code>, ...
+     * @throws ISO8583Exception if pack process throws it
      */
     public void printHexDump(PrintStream printStream) throws ISO8583Exception {
         if (printStream != null)
