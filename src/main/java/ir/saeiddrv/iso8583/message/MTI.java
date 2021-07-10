@@ -5,6 +5,11 @@ import ir.saeiddrv.iso8583.message.unpacks.UnpackMTIResult;
 import java.nio.charset.Charset;
 import java.util.Locale;
 
+/**
+ * This class provide an ISO-8583 MTI object.
+ *
+ * @author Saeid Darvish
+ */
 public class MTI {
 
     private final MTIInterpreter interpreter;
@@ -27,14 +32,29 @@ public class MTI {
         this.value = new int[0];
     }
 
+    /**
+     * Check if the MTI object has been set.
+     *
+     * @return true if MTI has been set
+     */
     public boolean hasValue() {
         return value.length == 4;
     }
 
+    /**
+     * First part of ISO-8583 MTI (ISO Version)
+     *
+     * @return a positive number if MTI has been set
+     */
     public int getIsoVersion() {
         return hasValue() ? value[0] : -1;
     }
 
+    /**
+     * Description of the first part of the ISO-8583 MTI
+     *
+     * @return a string description of MTI: ISO Version
+     */
     public String getIsoVersionDescription() {
         switch (getIsoVersion()){
             case 0: return "ISO 8583:1987";
@@ -51,10 +71,20 @@ public class MTI {
         }
     }
 
+    /**
+     * Second part of ISO-8583 MTI (Message Class)
+     *
+     * @return a positive number if MTI has been set
+     */
     public int getMessageClass() {
         return hasValue() ? value[1] : -1;
     }
 
+    /**
+     * Description of the second part of the ISO-8583 MTI
+     *
+     * @return a string description of MTI: Message Class
+     */
     public String getMessageClassDescription() {
         switch (getMessageClass()){
             case 0:
@@ -71,10 +101,20 @@ public class MTI {
         }
     }
 
+    /**
+     * Third part of ISO-8583 MTI (Message Function)
+     *
+     * @return a positive number if MTI has been set
+     */
     public int getMessageFunction() {
         return hasValue() ? value[2] : -1;
     }
 
+    /**
+     * Description of the third part of the ISO-8583 MTI
+     *
+     * @return a string description of MTI: Message Function
+     */
     public String getMessageFunctionDescription() {
         switch (getMessageFunction()){
             case 0: return "Request";
@@ -91,10 +131,20 @@ public class MTI {
         }
     }
 
+    /**
+     * Fourth part of ISO-8583 MTI (Message Origin)
+     *
+     * @return a positive number if MTI has been set
+     */
     public int getMessageOrigin() {
         return hasValue() ? value[3] : -1;
     }
 
+    /**
+     * Description of the fourth part of the ISO-8583 MTI
+     *
+     * @return a string description of MTI: Message Origin
+     */
     public String getMessageOriginDescription() {
         switch (getMessageOrigin()){
             case 0: return "Acquirer";
@@ -111,11 +161,21 @@ public class MTI {
         }
     }
 
+    /**
+     * ISO-8583 MTI as a numeric string.
+     *
+     * @return a string representation of ISO-8583 MTI numbers
+     */
     public String getLiteral() {
         return String.format(Locale.ENGLISH, "%d%d%d%d",
                 getIsoVersion(), getMessageClass(), getMessageFunction(), getMessageOrigin());
     }
 
+    /**
+     * ISO-8583 MTI numeric with descriptions.
+     *
+     * @return a string representation of ISO-8583 MTI with descriptions
+     */
     public String getLiteralDescription() {
         return String.format(Locale.ENGLISH, "%d(%s) %d(%s) %d(%s) %d(%s)",
                 getIsoVersion(), getIsoVersionDescription(),
@@ -124,14 +184,35 @@ public class MTI {
                 getMessageOrigin(), getMessageOriginDescription());
     }
 
+    /**
+     * Pack MTI
+     *
+     * @param charset for byte conversions
+     * @return a byte array as a result of pack process
+     * @throws ISO8583Exception if an exception occurred from interpreter
+     */
     public byte[] pack(Charset charset) throws ISO8583Exception {
         return hasValue() ? interpreter.pack(getLiteral(), charset) : new byte[0];
     }
 
+    /**
+     * Unpack MTI from received message
+     *
+     * @param message received message as byte array
+     * @param offset an index of message bytes
+     * @param charset for byte conversions
+     * @return a unpack object {@link ir.saeiddrv.iso8583.message.unpacks.UnpackMTIResult} as a result of unpack process
+     * @throws ISO8583Exception if an exception occurred from interpreter
+     */
     public UnpackMTIResult unpack(byte[] message, int offset, Charset charset) throws ISO8583Exception {
         return interpreter.unpack(message, offset, charset);
     }
 
+    /**
+     * Convert MTI object to String in log format.
+     *
+     * @return A string representation of the MTI object in log format.
+     */
     @Override
     public String toString() {
         return String.format("@MTI[value: %s [%s], interpreter: %s]",

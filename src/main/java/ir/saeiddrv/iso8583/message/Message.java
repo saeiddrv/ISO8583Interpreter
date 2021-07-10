@@ -14,6 +14,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * This class provide an ISO-8583 Message object.
+ *
+ * @author Saeid Darvish
+ */
 public class Message {
 
     Message() {}
@@ -142,35 +147,72 @@ public class Message {
         } else throw new ISO8583Exception("The FIELD[%d] is not defined.", number);
     }
 
+    /**
+     * current charset of the message object
+     *
+     * @return message charset
+     */
     public Charset getCharset() {
         return charset;
     }
 
+    /**
+     * Check if an interpreter for message length is exist
+     *
+     * @return true if an interpreter for message length has been defined
+     */
     public boolean hasLength() {
         return lengthInterpreter != null;
     }
 
+    /**
+     * Remove the interpreter for message length
+     */
     public void unsetLength() {
         setLengthInterpreter(null);
         lengthCount = 0;
     }
 
+    /**
+     * Number of message length digits
+     *
+     * @return the number of message length digits
+     */
     public int getLengthCount() {
         return lengthCount;
     }
 
+    /**
+     * Remove header from the message
+     */
     public void unsetHeader() {
         setHeader(null);
     }
 
+    /**
+     * Header of the message
+     *
+     * @return a Header object
+     */
     public Header getHeader() {
         return header;
     }
 
+    /**
+     * Check if a header for message is exist
+     *
+     * @return true if a header for message has been defined
+     */
     public boolean hasHeader() {
         return header != null;
     }
 
+    /**
+     * Change the current MTI value
+     *
+     * @param mtiLiteral a MTI numeric string. example: "0200"
+     * @throws ISO8583Exception if input has been invalid or MTI is not defined
+     */
     public void changeMTI(String mtiLiteral) throws ISO8583Exception {
         if (hasMTI()) {
             if (Validator.mti(mtiLiteral)) {
@@ -183,26 +225,52 @@ public class Message {
         else throw new ISO8583Exception("The MTI is not defined.");
     }
 
+    /**
+     * MTI of the message
+     *
+     * @return MTI object of the message
+     */
     public MTI getMti() {
         return mti;
     }
 
+    /**
+     * Check if a MTI for message is exist
+     *
+     * @return true if a MTI object for message has been defined
+     */
     public boolean hasMTI() {
         return mti != null;
     }
 
+    /**
+     * Clear the MTI value
+     */
     public void clearMTI() {
         if (hasMTI()) mti.clear();
     }
 
+    /**
+     * remove the MTI value from the message
+     */
     public void unsetMTI() {
         mti = null;
     }
 
+    /**
+     * The fields defined in this message
+     *
+     * @return an array of Field objects
+     */
     public Field[] getFields() {
         return fields.values().toArray(new Field[0]);
     }
 
+    /**
+     * The fields of bitmap type (BitmapField object)
+     *
+     * @return an array of BitmapField objects
+     */
     public BitmapField[] getBitmapFields() {
         return fields.values().stream()
                 .filter(field -> field instanceof BitmapField)
@@ -211,6 +279,11 @@ public class Message {
                 .toArray(BitmapField[]::new);
     }
 
+    /**
+     * The fields of bitmap type (BitmapField object) numbers
+     *
+     * @return an array of BitmapField indexes
+     */
     public int[] getBitmapFieldNumbers() {
         return fields.values().stream()
                 .filter(field -> field instanceof BitmapField)
@@ -218,6 +291,11 @@ public class Message {
                 .toArray();
     }
 
+    /**
+     * The fields of single type (SingleField object)
+     *
+     * @return an array of SingleField objects
+     */
     public SingleField[] getSingleFields() {
         return fields.values().stream()
                 .filter(field -> field instanceof SingleField)
@@ -226,6 +304,11 @@ public class Message {
                 .toArray(SingleField[]::new);
     }
 
+    /**
+     * The fields of combination type (CombineField object)
+     *
+     * @return an array of CombineField objects
+     */
     public CombineField[] getCombineFields() {
         return fields.values().stream()
                 .filter(field -> field instanceof CombineField)

@@ -1,7 +1,7 @@
 package ir.saeiddrv.iso8583.message;
 
 /**
- * This class holds two integer values to create a range of the numbers
+ * This class holds two integer values to create a range of the numbers.
  *
  * @author Saeid Darvish
  */
