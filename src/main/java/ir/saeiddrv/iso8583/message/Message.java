@@ -148,7 +148,7 @@ public class Message {
     }
 
     /**
-     * current charset of the message object
+     * Get current charset of this message
      *
      * @return message charset
      */
@@ -157,16 +157,16 @@ public class Message {
     }
 
     /**
-     * Check if an interpreter for message length is exist
+     * Check if an interpreter for length of this message has been defined
      *
-     * @return true if an interpreter for message length has been defined
+     * @return true if an interpreter for length of this message has been defined
      */
     public boolean hasLength() {
         return lengthInterpreter != null;
     }
 
     /**
-     * Remove the interpreter for message length
+     * Remove the interpreter for length of this message
      */
     public void unsetLength() {
         setLengthInterpreter(null);
@@ -174,44 +174,44 @@ public class Message {
     }
 
     /**
-     * Number of message length digits
+     * Get number of length digits of this message
      *
-     * @return the number of message length digits
+     * @return the number of length digits of this message
      */
     public int getLengthCount() {
         return lengthCount;
     }
 
     /**
-     * Remove header from the message
+     * Remove the header from this message
      */
     public void unsetHeader() {
         setHeader(null);
     }
 
     /**
-     * Header of the message
+     * Get the header of this message, if defined
      *
-     * @return a Header object
+     * @return header of this message
      */
     public Header getHeader() {
         return header;
     }
 
     /**
-     * Check if a header for message is exist
+     * Check if a header for this message has been defined
      *
-     * @return true if a header for message has been defined
+     * @return true if a header for this message has been defined
      */
     public boolean hasHeader() {
         return header != null;
     }
 
     /**
-     * Change the current MTI value
+     * Change the current MTI value in this message
      *
      * @param mtiLiteral a MTI numeric string. example: "0200"
-     * @throws ISO8583Exception if input has been invalid or MTI is not defined
+     * @throws ISO8583Exception if input has been invalid or MTI for this message has not been defined
      */
     public void changeMTI(String mtiLiteral) throws ISO8583Exception {
         if (hasMTI()) {
@@ -222,54 +222,54 @@ public class Message {
                         "The message type indicator is a four-digit numeric field " +
                         "which indicates the overall function of the message.", mtiLiteral);
         }
-        else throw new ISO8583Exception("The MTI is not defined.");
+        else throw new ISO8583Exception("The MTI has not been defined.");
     }
 
     /**
-     * MTI of the message
+     * Get the MTI of this message
      *
-     * @return MTI object of the message
+     * @return MTI object of this message
      */
     public MTI getMti() {
         return mti;
     }
 
     /**
-     * Check if a MTI for message is exist
+     * Check if a MTI for ths message has been defined
      *
-     * @return true if a MTI object for message has been defined
+     * @return true if a MTI for this message has been defined
      */
     public boolean hasMTI() {
         return mti != null;
     }
 
     /**
-     * Clear the MTI value
+     * Clear the MTI value from this message
      */
     public void clearMTI() {
         if (hasMTI()) mti.clear();
     }
 
     /**
-     * remove the MTI value from the message
+     * Remove the MTI value from this message
      */
     public void unsetMTI() {
         mti = null;
     }
 
     /**
-     * The fields defined in this message
+     * Get the fields defined in this message
      *
-     * @return an array of Field objects
+     * @return an array of the fields (Field object) defined in this message
      */
     public Field[] getFields() {
         return fields.values().toArray(new Field[0]);
     }
 
     /**
-     * The fields of bitmap type (BitmapField object)
+     * Get the fields of bitmap type (BitmapField object) defined in this message
      *
-     * @return an array of BitmapField objects
+     * @return an array of BitmapField type
      */
     public BitmapField[] getBitmapFields() {
         return fields.values().stream()
@@ -280,7 +280,7 @@ public class Message {
     }
 
     /**
-     * The fields of bitmap type (BitmapField object) numbers
+     * Get the fields of bitmap type (BitmapField object) numbers
      *
      * @return an array of BitmapField indexes
      */
@@ -292,9 +292,9 @@ public class Message {
     }
 
     /**
-     * The fields of single type (SingleField object)
+     * Get the fields of single type (SingleField object) defined in this message
      *
-     * @return an array of SingleField objects
+     * @return an array of SingleField type
      */
     public SingleField[] getSingleFields() {
         return fields.values().stream()
@@ -305,9 +305,9 @@ public class Message {
     }
 
     /**
-     * The fields of combination type (CombineField object)
+     * Get the fields of combination type (CombineField object) defined in this message
      *
-     * @return an array of CombineField objects
+     * @return an array of CombineField type
      */
     public CombineField[] getCombineFields() {
         return fields.values().stream()
@@ -317,18 +317,36 @@ public class Message {
                 .toArray(CombineField[]::new);
     }
 
+    /**
+     * Get the index of fields defined in this message
+     *
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be returned.
+     * @return an array of field indexes
+     */
     public int[] getFieldNumbers(boolean doSkipping) {
         IntStream stream = fields.keySet().stream().mapToInt(number -> number);
         if (doSkipping) stream = stream.filter(number -> !skipFields.contains(number));
         return stream.sorted().toArray();
     }
 
+    /**
+     * Get the index of fields defined in this message based a range
+     *
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be returned.
+     * @return an array of field indexes
+     */
     public int[] rangeOfFieldNumbers(int start, int end, boolean doSkipping) {
         return Arrays.stream(getFieldNumbers(doSkipping)).
                 filter(number -> number >= start && number <= end)
                 .toArray();
     }
 
+    /**
+     * Set the index of fields that must be skipped from the bitmap generation and pack processing
+     *
+     * @param updateBitmap if true, then regenerate bitmap
+     * @param fieldNumbers the index of fields that must be skipped, as a vararg
+     */
     public void setSkipFieldNumbers(boolean updateBitmap, int... fieldNumbers) {
         skipFields.clear();
         List<Integer> list = Arrays.stream(fieldNumbers).boxed().collect(Collectors.toList());
@@ -337,6 +355,12 @@ public class Message {
         if (updateBitmap) setBitmaps();
     }
 
+    /**
+     * Set the index of fields that must be skipped from the bitmap generation and pack processing
+     * Also, the bitmap will be regenerated
+     *
+     * @param fieldNumbers the index of fields that must be skipped, as a vararg
+     */
     public void setSkipFieldNumbers(int... fieldNumbers) {
         skipFields.clear();
         List<Integer> list = Arrays.stream(fieldNumbers).boxed().collect(Collectors.toList());
@@ -345,69 +369,157 @@ public class Message {
         setBitmaps();
     }
 
+    /**
+     * Get the index of fields that must be skipped from the bitmap generation and pack processing
+     *
+     * @return an array of field indexes
+     */
     public int[] getSkipFieldNumbers() {
         return skipFields.stream().mapToInt(number -> number).toArray();
     }
 
+    /**
+     * Undo the "setSkipFieldNumbers" method operation
+     */
     public void clearSkipFields() {
         skipFields.clear();
         setBitmaps();
     }
 
+    /**
+     * Get the primary bitmap of this message
+     *
+     * @return the primary bitmap
+     */
     public Bitmap getPrimaryBitmap() {
         return getBitmap(BitmapType.PRIMARY);
     }
 
+    /**
+     * Get the secondary bitmap of this message, if available
+     *
+     * @return the secondary bitmap
+     */
     public Bitmap getSecondaryBitmap() {
         return getBitmap(BitmapType.SECONDARY);
     }
 
+    /**
+     * Get the tertiary bitmap of this message, if available
+     *
+     * @return the tertiary bitmap
+     */
     public Bitmap getTertiaryBitmap() {
         return getBitmap(BitmapType.TERTIARY);
     }
 
+    /**
+     * Check if a field has been defined
+     *
+     * @param fieldNumber the index of the field
+     * @return true if field has been defined
+     */
     public boolean hasField(int fieldNumber) {
         return fields.containsKey(fieldNumber);
     }
 
+    /**
+     * Get a field from this message, if defined
+     *
+     * @param fieldNumber the index of the field
+     * @return the field object, if defined
+     */
     public Field getField(int fieldNumber) {
         return fields.get(fieldNumber);
     }
 
+    /**
+     * Check if a field has been defined as a BitmapField
+     *
+     * @param fieldNumber the index of the field
+     * @return true if field type is BitmapField
+     */
     public boolean isBitmapField(int fieldNumber) {
         return fields.get(fieldNumber) instanceof BitmapField;
     }
 
+    /**
+     * Check if a field has been defined as a SingleField
+     *
+     * @param fieldNumber the index of the field
+     * @return true if field type is SingleField
+     */
     public boolean isSingleField(int fieldNumber) {
         return fields.get(fieldNumber) instanceof SingleField;
     }
 
+    /**
+     * Check if a field has been defined as a CombineField
+     *
+     * @param fieldNumber the index of the field
+     * @return true if field type is CombineField
+     */
     public boolean isCombineField(int fieldNumber) {
         return fields.get(fieldNumber) instanceof CombineField;
     }
 
+    /**
+     * Get the lowest index of the fields defined in this message
+     *
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be searched.
+     * @return the lowest index
+     */
     public int getMinimumFieldNumber(boolean doSkipping) {
         int[] fieldNumbers = getFieldNumbers(doSkipping);
         if (fieldNumbers.length > 0) return fieldNumbers[0];
         else return 0;
     }
 
+    /**
+     * Get the largest index of the fields defined in this message
+     *
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be searched.
+     * @return the largest index
+     */
     public int getMaximumFieldNumber(boolean doSkipping) {
         int[] fieldNumbers = getFieldNumbers(doSkipping);
         if (fieldNumbers.length > 0) return fieldNumbers[fieldNumbers.length - 1];
         else return 0;
     }
 
+    /**
+     * Set the value of a field defined in this message
+     * This method is for setting the value of the SingleField types
+     *
+     * @param fieldNumber the index of the field
+     * @param value the field value as a byte array
+     * @throws ISO8583Exception If the value is invalid
+     */
     public void setValue(int fieldNumber, byte[] value) throws ISO8583Exception {
         if (isValueOK(fieldNumber, value))
             ((SingleField) fields.get(fieldNumber)).setValue(value);
     }
 
+    /**
+     * Set the value of a field defined in this message
+     * This method is for setting the value of the SingleField types
+     *
+     * @param fieldNumber the index of the field
+     * @param value the field value as a string
+     * @throws ISO8583Exception If the value is invalid
+     */
     public void setValue(int fieldNumber, String value) throws ISO8583Exception {
         if (isValueOK(fieldNumber, value))
             ((SingleField) fields.get(fieldNumber)).setValue(value, charset);
     }
 
+    /**
+     * Set the value of a subfield defined in a combination field
+     *
+     * @param fieldNumberSequence
+     * @param value the field value as a byte array
+     * @throws ISO8583Exception If the value or sequence number are invalid
+     */
     public void setDeepValue(String fieldNumberSequence, byte[] value) throws ISO8583Exception {
         if (Validator.deepField(fieldNumberSequence)) {
             Field field = findSubField(fieldNumberSequence);
