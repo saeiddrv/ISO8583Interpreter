@@ -17,9 +17,9 @@ public enum PadDirection {
     RIGHT;
 
     /**
-     * Convert Padding direction to String in log format.
+     * Convert padding direction to String in log format.
      *
-     * @return A string representation of the Padding direction in log format.
+     * @return a string representation of the Padding direction in log format.
      */
     @Override
     public String toString() {

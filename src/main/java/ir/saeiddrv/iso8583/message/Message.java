@@ -37,20 +37,20 @@ public class Message {
             throw new ISO8583Exception("The FIELD[%d] is not defined.", fieldNumber);
         if (isBitmapField(fieldNumber))
             throw new ISO8583Exception("The FIELD[%d] is related to 'ISO Bitmap'. " +
-                    "The bitmap fields will set automatically.", fieldNumber);
+                    "The bitmap fields will be set automatically.", fieldNumber);
         if (value == null)
             throw new ISO8583Exception("The content of the FIELD[%d] cannot be set to null. " +
-                    "You can use 'setSkipFields' method to skip from this field in pack process and bitmap generation.", fieldNumber);
+                    "You can use 'setSkipFields' method to skip from this field in pack processing and bitmap generation.", fieldNumber);
         return true;
     }
 
     private boolean isValueOK(Field field, Object value) throws ISO8583Exception {
         if (field instanceof BitmapField)
             throw new ISO8583Exception("The FIELD[%d] is related to 'ISO Bitmap'. " +
-                    "The bitmap fields will set automatically.", field.getNumber());
+                    "The bitmap fields will be set automatically.", field.getNumber());
         if (value == null)
             throw new ISO8583Exception("The content of the FIELD[%d] cannot be set to null. " +
-                    "You can use 'setSkipFields' method to skip from this field in pack process and bitmap generation.", field.getNumber());
+                    "You can use 'setSkipFields' method to skip from this field in pack processing and bitmap generation.", field.getNumber());
         return true;
     }
 
@@ -77,7 +77,7 @@ public class Message {
         if (sequenceLength == 1) return fields.get(parentNumber);
 
         if (!isCombineField(parentNumber))
-            throw new ISO8583Exception("The FIELD[%d] (parent of %s sequence) is not a CombineField.", parentNumber, fieldNumberSequence);
+            throw new ISO8583Exception("The FIELD[%d] (parent of the %s sequence) is not a CombineField.", parentNumber, fieldNumberSequence);
 
         CombineField field = (CombineField) fields.get(parentNumber);
         for (int index = 1; index < sequenceLength; index++) {
@@ -92,7 +92,7 @@ public class Message {
                 throw new ISO8583Exception("The FIELD[%d]->FIELD[%d] (from %s sequence) is not defined.",
                         field.getNumber(), fieldNumber, fieldNumberSequence);
         }
-        throw new ISO8583Exception("The end field of %s sequence cannot be a CombineField.", fieldNumberSequence);
+        throw new ISO8583Exception("The last field of the %s sequence cannot be a CombineField.", fieldNumberSequence);
     }
 
     private void setSkipFieldsInUnpack(List<Integer> skipFields) {
@@ -516,7 +516,8 @@ public class Message {
     /**
      * Set the value of a subfield defined in a combination field
      *
-     * @param fieldNumberSequence
+     * @param fieldNumberSequence field and subfield numbers that are separated using a dot character.
+     *                            If the subfield is itself a combination field, this sequence continues
      * @param value the field value as a byte array
      * @throws ISO8583Exception If the value or sequence number are invalid
      */
@@ -527,6 +528,14 @@ public class Message {
         }
     }
 
+    /**
+     * Set the value of a subfield defined in a combination field
+     *
+     * @param fieldNumberSequence field and subfield numbers that are separated using a dot character.
+     *                            If the subfield is itself a combination field, this sequence continues
+     * @param value the field value as a string
+     * @throws ISO8583Exception If the value or sequence number are invalid
+     */
     public void setDeepValue(String fieldNumberSequence, String value) throws ISO8583Exception {
         if (Validator.deepField(fieldNumberSequence)) {
             Field field = findSubField(fieldNumberSequence);
@@ -534,64 +543,172 @@ public class Message {
         }
     }
 
+    /**
+     * Get the value of a field defined in this message
+     *
+     * @param fieldNumber the index of the field
+     * @return the value of field as byte array, if defined
+     */
     public byte[] getValue(int fieldNumber) {
         if (hasField(fieldNumber))
             return fields.get(fieldNumber).getValue();
         else return null;
     }
 
+    /**
+     * Get the value of a field defined in this message
+     *
+     * @param fieldNumber the index of the field
+     * @return the value of field as string, if defined
+     */
     public String getValueAsString(int fieldNumber) {
         if (hasField(fieldNumber))
             return fields.get(fieldNumber).getValueAsString();
         else return null;
     }
 
+    /**
+     * Get the value of a subfield defined in a combination field
+     *
+     * @param fieldNumberSequence field and subfield numbers that are separated using a dot character.
+     *                            If the subfield is itself a combination field, this sequence continues
+     * @return the value of field as byte array, if defined
+     * @throws ISO8583Exception If the value or sequence number are invalid
+     */
+    public byte[] getDeepValue(String fieldNumberSequence) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumberSequence))
+            return findSubField(fieldNumberSequence).getValue();
+        else return null;
+    }
+
+    /**
+     * Get the value of a subfield defined in a combination field
+     *
+     * @param fieldNumberSequence field and subfield numbers that are separated using a dot character.
+     *                            If the subfield is itself a combination field, this sequence continues
+     * @return the value of field as string, if defined
+     * @throws ISO8583Exception If the value or sequence number are invalid
+     */
+    public String getDeepValueAsString(String fieldNumberSequence) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumberSequence))
+            return findSubField(fieldNumberSequence).getValueAsString();
+        else return null;
+    }
+
+    /**
+     * Get the value of a field defined in this message from a ValueFormatter, if defined
+     *
+     * @param fieldNumber the index of the field
+     * @return the value formatted of field, if ValueFormatter has been defined
+     */
     public String getValueFormatted(int fieldNumber) {
         if (hasField(fieldNumber))
             return fields.get(fieldNumber).getValueFormatted();
         else return null;
     }
 
+    /**
+     * Get the value of a subfield defined in a combination field in this message from a ValueFormatter, if defined
+     *
+     * @param fieldNumberSequence field and subfield numbers that are separated using a dot character.
+     *                            If the subfield is itself a combination field, this sequence continues
+     * @return the value formatted of field, if ValueFormatter has been defined
+     * @throws ISO8583Exception If the value or sequence number are invalid
+     */
+    public String getValueFormatted(String fieldNumberSequence) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumberSequence))
+            return findSubField(fieldNumberSequence).getValueFormatted();
+        else return null;
+    }
+
+    /**
+     * Clear the value of a field defined in this message
+     *
+     * @param fieldNumber the index of the field
+     */
     public void clearValue(int fieldNumber) {
         if (hasField(fieldNumber))
             fields.get(fieldNumber).clear();
     }
 
+    /**
+     * Clear the value of a subfield defined in a combination field in this message
+     *
+     * @param fieldNumberSequence field and subfield numbers that are separated using a dot character.
+     *                            If the subfield is itself a combination field, this sequence continues
+     * @throws ISO8583Exception If the value or sequence number are invalid
+     */
+    public void clearValue(String fieldNumberSequence) throws ISO8583Exception {
+        if (Validator.deepField(fieldNumberSequence))
+            findSubField(fieldNumberSequence).clear();
+    }
+
+    /**
+     * Clear the value of all fields and subfields defined in this message
+     *
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be cleared.
+     */
     public void clearAllValue(boolean doSkipping) {
         for(int fieldNumber : getFieldNumbers(doSkipping))
             fields.get(fieldNumber).clear();
     }
 
+    /**
+     * Set the value of all fields defined in this message
+     * The index of the array is equal to the index of the fields defined in this message
+     * put a null value to the indexes you do not want to set
+     * This method is not used for setting combination fields!
+     *
+     * @param fieldsValue a string array of values
+     * @throws ISO8583Exception If the value of one of the fields is invalid
+     */
     public void setFields(String[] fieldsValue) throws ISO8583Exception {
-        for (int i = 0; i < fieldsValue.length; i++)
-            setValue(i, fieldsValue[i]);
+        for (int i = 0; i < fieldsValue.length; i++) {
+            String value = fieldsValue[i];
+            if (value != null) setValue(i, value);
+            else {
+                if (hasField(i)) getField(i).clear();
+            }
+        }
     }
 
+    /**
+     * Set the value of all fields defined in this message
+     * The key of the map object is equal to the index of the fields defined in this message
+     * This method is not used for setting combination fields!
+     *
+     * @param fieldsValue a map object of indexes and values
+     * @throws ISO8583Exception If the value of one of the fields is invalid
+     */
     public void setFields(Map<Integer, String> fieldsValue) throws ISO8583Exception {
         for (Map.Entry<Integer, String> entry: fieldsValue.entrySet())
             setValue(entry.getKey(), entry.getValue());
     }
 
-    // Packing
-
+    /**
+     * Pack the message
+     *
+     * @return the pack process result as a byte array object
+     * @throws ISO8583Exception If throws from the pack process
+     */
     public byte[] pack() throws ISO8583Exception {
         try {
-            // CREATE PACK BUFFER
+            // CREATE THE PACK BUFFER
             ByteArrayOutputStream messageBuffer = new ByteArrayOutputStream();
 
-            // PACKING HEADER (IF EXIST)
+            // PACK THE HEADER (IF EXIST)
             if (hasHeader())
                 messageBuffer.write(header.pack(charset));
 
-            // PACKING MTI (IF EXIST)
+            // PACK THE MTI (IF EXIST)
             if (hasMTI())
                 messageBuffer.write(mti.pack(charset));
 
-            // PACKING ALL AVAILABLE FIELDS
+            // PACK THE ALL AVAILABLE FIELDS
             for (int fieldNumber : getFieldNumbers(true))
                 messageBuffer.write(fields.get(fieldNumber).pack());
 
-            // PACKING MESSAGE LENGTH AND MERGE IT
+            // PACK THE LENGTH OF THE MESSAGE AND MERGE WITH IT
             ByteArrayOutputStream finalPack = new ByteArrayOutputStream();
             byte[] messageBytes =  messageBuffer.toByteArray();
             if (hasLength()) {
@@ -604,16 +721,29 @@ public class Message {
             return finalPack.toByteArray();
 
         } catch (Exception exception) {
-            throw new ISO8583Exception("PACKING ERROR: %s", exception.getMessage());
+            throw new ISO8583Exception("PACK ERROR: %s", exception.getMessage());
         }
     }
 
-    // Unpacking
-
+    /**
+     * Unpack the message
+     *
+     * @param packMessage the packed message as a byte array object
+     * @return the unpack process result as a Message object
+     * @throws ISO8583Exception If throws from the unpack process
+     */
     public Message unpack(byte[] packMessage) throws ISO8583Exception {
         return unpack(packMessage, null);
     }
 
+    /**
+     * Unpack the message
+     *
+     * @param packMessage the packed message as a byte array object
+     * @param printStream an output stream for log the result of the every step from the unpack process
+     * @return the unpack process result as a Message object
+     * @throws ISO8583Exception If throws from the unpack process
+     */
     public Message unpack(byte[] packMessage, PrintStream printStream) throws ISO8583Exception {
         try {
             printDescription(printStream);
@@ -621,7 +751,7 @@ public class Message {
             // INIT OFFSET
             int offset = 0;
 
-            // UNPACKING MESSAGE LENGTH (IF EXIST)
+            // UNPACK THE LENGTH OF THE MESSAGE (IF EXIST)
             if (hasLength()) {
                 UnpackLengthResult unpackMessageLength =
                         lengthInterpreter.unpack(packMessage, offset, lengthCount, charset);
@@ -629,14 +759,14 @@ public class Message {
                 printLength(printStream);
             }
 
-            // UNPACKING HEADER (IF EXIST)
+            // UNPACK THE HEADER (IF EXIST)
             if (hasHeader()) {
                 UnpackContentResult unpackHeader = header.unpack(packMessage, offset, charset);
                 offset = unpackHeader.getNextOffset();
                 printHeader(printStream);
             }
 
-            // UNPACKING MTI (IF EXIST)
+            // UNPACK THE MTI (IF EXIST)
             if (hasMTI()) {
                 UnpackMTIResult unpackMTI = mti.unpack(packMessage, offset, charset);
                 int[] mtiArray = TypeUtils.numberStringToIntArray(unpackMTI.getValue());
@@ -645,7 +775,7 @@ public class Message {
                 printMTI(printStream);
             }
 
-            // UNPACKING ALL AVAILABLE FIELDS
+            // UNPACK THE ALL AVAILABLE FIELDS
             List<Integer> fieldNumbers = new ArrayList<>();
 
             BitmapField[] bitmapFields = getBitmapFields();
@@ -676,51 +806,86 @@ public class Message {
             return this;
 
         } catch (Exception exception) {
-            throw new ISO8583Exception("UNPACKING ERROR: %s", exception.getMessage());
+            throw new ISO8583Exception("UNPACK ERROR: %s", exception.getMessage());
         }
     }
 
-    // Print objects to output
-
+    /**
+     * Log the message description
+     *
+     * @param printStream an output stream
+     */
     public void printDescription(PrintStream printStream) {
         if (printStream != null) printStream.print(descriptionToString());
     }
 
+    /**
+     * Log the length of this message
+     *
+     * @param printStream an output stream
+     */
     public void printLength(PrintStream printStream) {
         if (printStream != null) printStream.print(lengthToString());
     }
 
+    /**
+     * Log the header of this message
+     *
+     * @param printStream an output stream
+     */
     public void printHeader(PrintStream printStream) {
         if (printStream != null) printStream.print(headerToString());
     }
 
+    /**
+     * Log the MTI of this message
+     *
+     * @param printStream an output stream
+     */
     public void printMTI(PrintStream printStream) {
         if (printStream != null) printStream.print(mtiToString());
     }
 
+    /**
+     * Log the all fields and subfields defined in this message
+     *
+     * @param printStream an output stream
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be logged.
+     */
     public void printFields(PrintStream printStream, boolean doSkipping) {
         if (printStream != null) printStream.print(fieldsToString(doSkipping));
     }
 
+    /**
+     * Log the a field defined in this message
+     *
+     * @param fieldNumber the index of the field
+     * @param printStream an output stream
+     */
     public void printField(int fieldNumber, PrintStream printStream) {
         if (printStream != null) printStream.print(fieldToString(fieldNumber));
     }
 
+    /**
+     * Log the index of fields that must be skipped from the bitmap generation and pack processing
+     *
+     * @param printStream an output stream
+     */
     public void printSkipFields(PrintStream printStream) {
         if (printStream != null) printStream.print(skipFieldsToString());
     }
 
     /**
-     * Send String representation of the Message object to a specific output.
+     * Log this Message object
      *
-     * @param printStream the intended output: <code>System.out</code>, <code>File</code>, ...
+     * @param printStream an output stream. (the intended output: <code>System.out</code>, <code>File</code>, ...)
      */
     public void printObject(PrintStream printStream) {
         if (printStream != null) printStream.println(toString());
     }
 
     /**
-     * Send hexdump of the message to a specific output.
+     * Send the hexdump of this message to a specific output.
      *
      * @param printStream the intended output: <code>System.out</code>, <code>File</code>, ...
      * @throws ISO8583Exception if pack process throws it
@@ -731,7 +896,7 @@ public class Message {
     }
 
     /**
-     * Convert message description to log format.
+     * Convert the message description to log format.
      *
      * @return a representation of the message description in log format.
      */
@@ -740,9 +905,9 @@ public class Message {
     }
 
     /**
-     * Convert length of the message object to String in log format.
+     * Convert the length of this message object to String in log format.
      *
-     * @return a string representation of the length of the message object in log format.
+     * @return a string representation of the length of this message object in log format.
      */
     public String lengthToString() {
         StringBuilder builder = new StringBuilder();
@@ -755,7 +920,7 @@ public class Message {
     }
 
     /**
-     * Convert header object to String in log format.
+     * Convert the header object to String in log format.
      *
      * @return a string representation of the <code>Header</code> object in log format.
      */
@@ -767,7 +932,7 @@ public class Message {
     }
 
     /**
-     * Convert MTI object to String in log format.
+     * Convert the MTI object to String in log format.
      *
      * @return a string representation of the <code>MTI</code> object in log format.
      */
@@ -779,9 +944,9 @@ public class Message {
     }
 
     /**
-     * Convert all Field objects to String in log format.
+     * Convert the all Field objects to String in log format.
      *
-     * @param doSkipping <code>true</code>: skipping fields will not become
+     * @param doSkipping if true, then only the index of fields that exist in bitmap will be converted.
      * @return a string representation of the all <code>Field</code> objects in log format.
      *         each field will be present in a separate line.
      */
@@ -793,9 +958,9 @@ public class Message {
     }
 
     /**
-     * Convert Field object to String in log format.
+     * Convert a Field object defined in this message to String in log format.
      *
-     * @param fieldNumber the intended field number
+     * @param fieldNumber the index of the field
      * @return a string representation of the a specific <code>Field</code> object in log format.
      */
     public String fieldToString(int fieldNumber) {
@@ -810,7 +975,7 @@ public class Message {
     }
 
     /**
-     * Convert array of the skipping fields to String in log format.
+     * Convert the index of fields that must be skipped from the bitmap generation and pack processing to String in log format.
      *
      * @return a string representation of the skipping fields in log format.
      */
@@ -819,7 +984,7 @@ public class Message {
     }
 
     /**
-     * Convert Message object to String in log format.
+     * Convert the Message object to String in log format.
      *
      * @return a string representation of the <code>Message</code> object in log format.
      */

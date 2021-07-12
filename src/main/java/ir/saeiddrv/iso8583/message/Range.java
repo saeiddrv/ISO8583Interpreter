@@ -29,7 +29,7 @@ public class Range {
      *
      * @param start The start of the range.
      * @param end The end of the range.
-     * @return A new Range object.
+     * @return a new Range object.
      * @throws IllegalArgumentException if end value be less than the start value
      */
     public static Range of(int start, int end) {
@@ -40,27 +40,27 @@ public class Range {
     }
 
     /**
-     * Return The start of the range object.
+     * Return the start of the range object.
      *
-     * @return The start of the range.
+     * @return the start of the range.
      */
     public int getStart() {
         return start;
     }
 
     /**
-     * Return The end of the range object.
+     * Return the end of the range object.
      *
-     * @return The end of the range.
+     * @return the end of the range.
      */
     public int getEnd() {
         return end;
     }
 
     /**
-     * Convert Range object to String in log format.
+     * Convert range object to String in log format.
      *
-     * @return A string representation of the Range object in log format.
+     * @return a string representation of the Range object in log format.
      */
     @Override
     public String toString() {
