@@ -1,7 +1,11 @@
 package ir.saeiddrv.iso8583.message.interpreters;
 
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.interpreters.base.MTIInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackMTIResult;
+import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class ASCIIMTIInterpreter implements MTIInterpreter {
 
@@ -12,7 +16,29 @@ public class ASCIIMTIInterpreter implements MTIInterpreter {
 
     @Override
     public byte[] pack(String mti, Charset charset) {
-        return new byte[0];
+        // Packing data
+        return TypeUtils.byteArrayToHexArray(TypeUtils.encodeBytes(mti, charset), charset);
+    }
+
+    @Override
+    public UnpackMTIResult unpack(byte[] message,
+                                  int offset,
+                                  Charset charset) throws ISO8583Exception {
+        // Finding the latest data position
+        int endOffset = offset + 4;
+
+        if (message.length < endOffset)
+            throw new ISO8583Exception("UNPACKING ERROR, MTI (%s): The received message length is less than the required amount. " +
+                    "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
+
+        // Copying the data related to this unit
+        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
+
+        // Unpacking
+        String unpack = TypeUtils.decodeBytes(pack, charset);
+
+        // Creating result object
+        return new UnpackMTIResult(unpack, endOffset);
     }
 
 }

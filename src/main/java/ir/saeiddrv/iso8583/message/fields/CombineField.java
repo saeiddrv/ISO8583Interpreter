@@ -1,28 +1,64 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.Range;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CombineField implements Field {
 
     private final int number;
     private final Length length;
     private final Map<Integer, Field> fields = new HashMap<>();
-    private FieldFormatter formatter = null;
+    private Charset charset;
+    private ValueFormatter formatter;
     private String description = "UNDEFINED";
 
-    public CombineField(int number, Length length, Field... fields) {
+    private CombineField(int number,
+                         LengthValue lengthValue,
+                         LengthInterpreter lengthInterpreter,
+                         Field... fields) {
         this.number = number;
-        this.length = length;
+        this.length = new Length(lengthValue, lengthInterpreter);
         for (Field field : fields)
-            this.fields.put(field.getNumber(), field);
+            this.fields.put(field.getNumber(), Objects.requireNonNull(field,
+                    "The FIELD[" + number + "] can not contain null subfields."));
+    }
+
+    public static CombineField create(int number,
+                                      int lengthCount,
+                                      int lengthMaximumValue,
+                                      LengthInterpreter lengthInterpreter,
+                                      Field... fields) {
+        return new CombineField(number,
+                LengthValue.create(lengthCount, lengthMaximumValue),
+                Objects.requireNonNull(lengthInterpreter,
+                "'LengthInterpreter' of FIELD[" + number + "] cannot be set to null."),
+                fields);
+    }
+
+    public static CombineField create(int number,
+                                      LengthValue lengthValue,
+                                      LengthInterpreter lengthInterpreter,
+                                      Field... fields) {
+        return new CombineField(number,
+                Objects.requireNonNull(lengthValue,
+                        "'LengthValue' of FIELD[" + number + "] cannot be set to null."),
+                Objects.requireNonNull(lengthInterpreter,
+                        "'LengthInterpreter' of FIELD[" + number + "] cannot be set to null."),
+                fields);
+    }
+
+    public static CombineField create(int number, Field... fields) {
+        return new CombineField(number, LengthValue.UNDEFINED, null, fields);
+    }
+
+    public boolean hasSubField(int fieldNumber) {
+        return fields.containsKey(fieldNumber);
     }
 
     public Field getSubField(int fieldNumber) {
@@ -33,9 +69,9 @@ public class CombineField implements Field {
         return fields.keySet().stream().mapToInt(number -> number).sorted().toArray();
     }
 
-    public int[] selectFieldNumbers(int from, int to) {
+    public int[] rangeOfFieldNumbers(int start, int end) {
         return Arrays.stream(getFieldNumbers()).
-                filter(number -> number >= from && number <= to)
+                filter(number -> number >= start && number <= end)
                 .toArray();
     }
 
@@ -56,7 +92,7 @@ public class CombineField implements Field {
     private void setBitmaps() {
         for (BitmapField field : getBitmapFields()) {
             Range bitmapRange = field.getBitmap().getRange();
-            field.setFieldNumbers(selectFieldNumbers(bitmapRange.getStart(), bitmapRange.getEnd()));
+            field.setFieldNumbers(rangeOfFieldNumbers(bitmapRange.getStart(), bitmapRange.getEnd()));
         }
     }
 
@@ -71,13 +107,18 @@ public class CombineField implements Field {
     }
 
     @Override
-    public void setFormatter(FieldFormatter formatter) {
+    public void setCharset(Charset charset) {
+        if(this.charset == null) this.charset = charset;
+    }
+
+    @Override
+    public void setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
     }
 
     @Override
-    public String getFormatted() {
-        if (hasFormatter()) return formatter.getFormatted(number, getValue());
+    public String getValueFormatted() {
+        if (hasFormatter()) return formatter.getFormatted(number, getValueAsString());
         else return null;
     }
 
@@ -87,10 +128,23 @@ public class CombineField implements Field {
     }
 
     @Override
-    public String getValue() {
+    public byte[] getValue() {
+        try {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            for (int fieldNumber : getFieldNumbers())
+                buffer.write(fields.get(fieldNumber).getValue());
+            return buffer.toByteArray();
+
+        } catch (Exception exception) {
+            return null;
+        }
+    }
+
+    @Override
+    public String getValueAsString() {
         StringBuilder builder = new StringBuilder();
         for (int fieldNumber : getFieldNumbers())
-            builder.append(fields.get(fieldNumber).getValue());
+            builder.append(fields.get(fieldNumber).getValueAsString());
         return builder.toString();
     }
 
@@ -101,36 +155,64 @@ public class CombineField implements Field {
 
     @Override
     public void clear() {
-        fields.clear();
+        for (int fieldNumber : getFieldNumbers())
+            fields.get(fieldNumber).clear();
     }
 
     @Override
-    public byte[] pack(Charset charset) throws IOException, ISOMessageException {
-        setBitmaps();
-        // START FIELD PACKING, CREATE PACK BUFFER
-        ByteArrayOutputStream finalBuffer = new ByteArrayOutputStream();
+    public byte[] pack() throws ISO8583Exception {
+        try {
+            setBitmaps();
+            // START FIELD PACKING, CREATE PACK BUFFER
+            ByteArrayOutputStream finalBuffer = new ByteArrayOutputStream();
 
-        // PACK ALL AVAILABLE FIELDS
-        ByteArrayOutputStream contentBuffer = new ByteArrayOutputStream();
-        for (int fieldNumber : getFieldNumbers())
-            contentBuffer.write(fields.get(fieldNumber).pack(charset));
-        byte[] contentPack = contentBuffer.toByteArray();
+            // PACK ALL AVAILABLE FIELDS
+            ByteArrayOutputStream contentBuffer = new ByteArrayOutputStream();
+            for (int fieldNumber : getFieldNumbers())
+                contentBuffer.write(fields.get(fieldNumber).pack());
+            byte[] contentPack = contentBuffer.toByteArray();
 
-        if (length.hasInterpreter())
             finalBuffer.write(length.pack(number, contentPack.length, charset));
+            finalBuffer.write(contentPack);
 
-        finalBuffer.write(contentPack);
+            // FINISHED
+            return finalBuffer.toByteArray();
 
-        // FINISHED
-        return finalBuffer.toByteArray();
+        } catch (Exception exception) {
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
+    }
+
+    @Override
+    public int unpack(byte[] message, int offset) throws ISO8583Exception {
+        try {
+            // UNPACK LENGTH
+            UnpackLengthResult unpackLength = length.unpack(message, offset, number, charset);
+            if (unpackLength != null)
+                offset = unpackLength.getNextOffset();
+
+            // UNPACK INNER FIELDS
+            for (int fieldNumber : getFieldNumbers())
+                offset = fields.get(fieldNumber).unpack(message, offset);
+
+            return offset;
+
+        } catch (Exception exception) {
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
     }
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
+        StringBuilder fieldsString = new StringBuilder();
         for (Field field : fields.values())
-            stringBuilder.append("    ->").append(field.toString()).append("\n");
-        return String.format("@CombineField[number: %s, value: %s, fieldCount: %s, description: %s, subFields:\n%s]",
-                number, hasFormatter() ? getFormatted() : getValue(), fields.size(), description, stringBuilder.toString());
+            fieldsString.append("    ->").append(field.toString()).append("\n");
+        return String.format("@CombineField[number: %s, value: %s, fieldCount: %s, charset: %s, description: %s, subFields:\n%s]",
+                number,
+                hasFormatter() ? getValueFormatted() : getValueAsString(),
+                fields.size(),
+                charset.displayName(),
+                description,
+                fieldsString.toString());
     }
 }

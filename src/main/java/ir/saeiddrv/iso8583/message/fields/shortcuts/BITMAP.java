@@ -2,9 +2,10 @@ package ir.saeiddrv.iso8583.message.fields.shortcuts;
 
 import ir.saeiddrv.iso8583.message.Range;
 import ir.saeiddrv.iso8583.message.fields.*;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
-import ir.saeiddrv.iso8583.message.interpreters.BinaryBitmapInterpreter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
+import ir.saeiddrv.iso8583.message.interpreters.BitmapBinaryInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.BitmapInterpreter;
+import java.nio.charset.Charset;
 
 public class BITMAP implements ShortcutField {
 
@@ -12,11 +13,19 @@ public class BITMAP implements ShortcutField {
     private final int length;
     private final Range range;
     private final BitmapInterpreter interpreter;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
+    private BITMAP(BitmapType type, int length, Range range, BitmapInterpreter interpreter) {
+        this.type = type;
+        this.length = length;
+        this.range = range;
+        this.interpreter = interpreter;
+    }
+
     public static BITMAP create(BitmapType type, int length, Range range) {
-        return new BITMAP(type, length, range, new BinaryBitmapInterpreter());
+        return new BITMAP(type, length, range, new BitmapBinaryInterpreter());
     }
 
     static BITMAP create(BitmapType type, int length, Range range, BitmapInterpreter interpreter) {
@@ -30,22 +39,22 @@ public class BITMAP implements ShortcutField {
     }
 
     @Override
-    public ShortcutField setFormatter(FieldFormatter formatter) {
+    public ShortcutField setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
         return this;
     }
 
-    private BITMAP(BitmapType type, int length, Range range, BitmapInterpreter interpreter) {
-        this.type = type;
-        this.length = length;
-        this.range = range;
-        this.interpreter = interpreter;
+    @Override
+    public ShortcutField setCharset(Charset charset) {
+        this.charset = charset;
+        return this;
     }
 
     @Override
     public Field toField(int fieldNumber) {
         Field field = BitmapField.create(fieldNumber, type, range, length, interpreter);
-        field.setFormatter(formatter);
+        field.setCharset(charset);
+        field.setValueFormatter(formatter);
         field.setDescription(description);
         return field;
     }

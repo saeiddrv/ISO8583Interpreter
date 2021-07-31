@@ -3,33 +3,37 @@ package ir.saeiddrv.iso8583.message.interpreters;
 import ir.saeiddrv.iso8583.message.ISO8583Exception;
 import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
 import ir.saeiddrv.iso8583.message.interpreters.base.MessageLengthInterpreter;
-import ir.saeiddrv.iso8583.message.utilities.PadUtils;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-public class BCDMessageLengthInterpreter implements MessageLengthInterpreter {
+public class HexMessageLengthInterpreter implements MessageLengthInterpreter {
 
     @Override
     public String getName() {
-        return "BCD Message Length Interpreter";
+        return "HEX Message Length Interpreter";
     }
 
     @Override
     public byte[] pack(int count, int messageBytesLength, Charset charset) throws ISO8583Exception {
         if (count > 0) {
-            // Checking count of the length
-            if (count % 2 != 0)
-                throw new ISO8583Exception("The message length count for BCD coding must be even.");
+            // Length: Integer -> HEX -> byte[]
+            byte[] data = TypeUtils.hexStringToByteArray(Integer.toHexString(messageBytesLength));
 
-            // Setting pad
-            String decimalLength = PadUtils.padLeft(String.valueOf(messageBytesLength), count * 2, '0');
+            // Checking count of the length bytes
+            int lengthCount = data.length;
+            if (lengthCount > count)
+                throw new ISO8583Exception("The length count of the generated message " +
+                        "(%s: %s bytes in HEX) is greater than the specified length (%s).",
+                        messageBytesLength, lengthCount, count);
+
+            // Setting left-pad by zero (if necessary)
+            byte[] padData = (count > lengthCount) ? new byte[count - lengthCount] : new byte[0];
+            data = ByteBuffer.allocate(count).put(padData).put(data).array();
 
             // Encoding data with charset
-            byte[] data = TypeUtils.encodeBytes(decimalLength, charset);
-
-            // Packing data by BCD coding
-            return TypeUtils.byteArrayToBCD(data);
+            return TypeUtils.encodeBytes(data, charset);
         } else {
             return new byte[0]; // WITHOUT LENGTH
         }
@@ -48,12 +52,11 @@ public class BCDMessageLengthInterpreter implements MessageLengthInterpreter {
                     "[messageLength: %s, startIndex: %s, endIndex: %s]", getName(), message.length, offset, endOffset);
 
         // Copying the data related to this unit and encoding it with charset
-        byte[] pack = Arrays.copyOfRange(message, offset, endOffset);
-        pack = TypeUtils.encodeBytes(pack, charset);
+        byte[] data = Arrays.copyOfRange(message, offset, endOffset);
+        data = TypeUtils.encodeBytes(data, charset);
 
-        // Unpacking from BCD coding and cast to Integer
-        String unpack = TypeUtils.bcdBytesToText(pack);
-        int length = Integer.parseInt(unpack);
+        // Length: byte[] -> HEX -> Integer
+        int length =  Integer.parseInt(TypeUtils.byteArrayToHexString(data), 16);
 
         // Creating result object
         return new UnpackLengthResult(length, endOffset);

@@ -2,7 +2,7 @@ package ir.saeiddrv.iso8583.message.fields;
 
 public enum BitmapType {
 
-    DATA,
+    COSTUME,
     PRIMARY,
     SECONDARY,
     TERTIARY;

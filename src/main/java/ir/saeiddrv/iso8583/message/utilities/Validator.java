@@ -35,4 +35,9 @@ public final class Validator {
         if (cardNumber == null || cardNumber.isEmpty()) return false;
         return number(cardNumber, 16, 19);
     }
+
+    public static boolean deepField(String deepFieldNumbers) {
+        if (deepFieldNumbers == null || deepFieldNumbers.isEmpty()) return false;
+        return deepFieldNumbers.matches("^[0-9.]+$");
+    }
 }

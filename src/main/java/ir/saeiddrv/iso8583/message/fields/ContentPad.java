@@ -38,20 +38,25 @@ public class ContentPad {
         this.character = character;
     }
 
-    public byte[] doPad(byte[] value, ContentType type, int maximumLength) {
+    public boolean hasPadding() {
+        return getPadDirection() != PadDirection.NONE;
+    }
+
+    public byte[] doPad(byte[] value, int maximumLength) {
+        if(!hasPadding()) return value;
+
         if (value.length >= maximumLength) return value;
         int padLength = maximumLength - value.length;
-        boolean checkNumber = (type == ContentType.RAW || type == ContentType.CHARACTER);
         switch (padDirection) {
             case LEFT:
                 return ByteBuffer.allocate(value.length + padLength)
-                        .put(TypeUtils.generateByteArrayFromCharacter(character, padLength, checkNumber))
+                        .put(TypeUtils.generateByteArrayFromCharacter(character, padLength))
                         .put(value)
                         .array();
             case RIGHT:
                 return ByteBuffer.allocate(value.length + padLength)
                         .put(value)
-                        .put(TypeUtils.generateByteArrayFromCharacter(character, padLength, checkNumber))
+                        .put(TypeUtils.generateByteArrayFromCharacter(character, padLength))
                         .array();
             default:
                 return value;

@@ -1,109 +1,76 @@
 package ir.saeiddrv.iso8583.message.fields;
 
-import ir.saeiddrv.iso8583.message.ISOMessageException;
+import ir.saeiddrv.iso8583.message.ISO8583Exception;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.utilities.TypeUtils;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 public class Content {
 
     private final ContentInterpreter interpreter;
-    private final ContentValue value;
+    private final ContentPad pad;
+    private byte[] value = new byte[]{0};
 
-    Content(ContentInterpreter interpreter, ContentPad contentPad, ContentType contentType) {
+    Content(ContentInterpreter interpreter, ContentPad contentPad) {
         this.interpreter = interpreter;
-        this.value = new ContentValue(contentType, contentPad);
+        this.pad = contentPad;
     }
 
-    ContentInterpreter getInterpreter() {
-        return interpreter;
-    }
-
-    public ContentValue getValue() {
+    public byte[] getValue() {
         return value;
     }
 
-    public ContentType getType() {
-        return value.getType();
-    }
-
-    public boolean isRAW() {
-        return getType() == ContentType.RAW;
-    }
-
-    public int getLength() {
-        return value.getValue().length;
+    public String getValueAsString(Charset charset) {
+        if (hasInterpreter()) return interpreter.transfer(value, charset);
+        return TypeUtils.decodeBytes(value, charset);
     }
 
     public void setValue(byte[] value) {
-        this.value.setValue(value);
+        this.value = value;
     }
 
-    public void setValueFromString(String value, Charset charset) throws ISOMessageException {
-        switch (getType()) {
-            case BINARY:
-                setValue(TypeUtils.hexStringToByteArray(value));
-                break;
-            case NUMBER:
-                setValue(TypeUtils.numberStringToByteArray(value));
-                break;
-            case AMOUNT:
-                setValue(TypeUtils.amountToByteArray(value));
-                break;
-            case CHARACTER:
-                setValue(TypeUtils.textToByteArray(value));
-                break;
-            case TRACK2:
-                value = value.replace("=", "D");
-                setValue(TypeUtils.textToByteArray(value));
-                break;
-            case IRAN_SYSTEM:
-                break;
-            case RAW:
-                throw new ISOMessageException("RAW content should only be quantified in bytes. " +
-                        "Because no information is available to convert this field content to bytes.");
-        }
-    }
-
-    public String getValueAsString() {
-        switch (getType()) {
-            case BINARY:
-                return TypeUtils.byteArrayToHexString(getValue().getValue());
-            case TRACK2:
-                String track2 = new String(getValue().getValue());
-                return track2.replaceFirst("D", "=");
-            case NUMBER:
-            case AMOUNT:
-                return TypeUtils.numberBytesToString(getValue().getValue());
-            case IRAN_SYSTEM:
-                return "";
-            default:
-                return new String(getValue().getValue());
-        }
-    }
-
-    public boolean hasPadding() {
-        return value.hasPadding();
+    public void setValue(String value, Charset charset) {
+        if (hasInterpreter()) setValue(interpreter.transfer(value, charset));
+        else setValue(TypeUtils.encodeBytes(value, charset));
     }
 
     public void doPad(int maximumLength) {
-        if (hasPadding())
-            value.doPad(maximumLength);
+        value = pad.doPad(value, maximumLength);
     }
 
     public boolean hasInterpreter() {
         return interpreter != null;
     }
 
-    byte[] pack(int filedNumber, LengthValue length, Charset charset) throws ISOMessageException {
+    public byte[] pack(int filedNumber,
+                       LengthValue length,
+                       Charset charset) throws ISO8583Exception {
         if (hasInterpreter())
-            return interpreter.pack(filedNumber, length, value, charset);
+            return interpreter.pack(filedNumber, length, value, pad, charset);
         else
-            return new byte[0];
+            return value;
+    }
+
+    public UnpackContentResult unpack(byte[] message,
+                                      int offset,
+                                      int filedNumber,
+                                      int length,
+                                      Charset charset) throws ISO8583Exception {
+        if (hasInterpreter())
+            return interpreter.unpack(message, offset, filedNumber, length, pad, charset);
+        else {
+            int endOffset = offset + length;
+            byte[] unpack = Arrays.copyOfRange(message, offset, offset + length);
+            unpack = TypeUtils.encodeBytes(unpack, charset);
+            return new UnpackContentResult(unpack, endOffset);
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("@Content[value: %s, interpreter: %s]", value, interpreter.getName());
+        return String.format("@Content[value: %s, pad: %s, interpreter: %s]",
+                Arrays.toString(value), pad, interpreter.getName());
     }
 }

@@ -13,7 +13,7 @@ public class LengthValue {
                     "(LengthValue: 'count' must be a positive number): " + count);
         if (maximumValue < 0)
             throw new IllegalArgumentException("Invalid value " +
-                    "(LengthValue: 'maximumValue' must be a positive number): " + count);
+                    "(LengthValue: 'maximumValue' must be a positive number): " + maximumValue);
         return new LengthValue(count, maximumValue);
     }
 
@@ -34,9 +34,13 @@ public class LengthValue {
         return count < 0;
     }
 
+    public boolean isFixed() {
+        return count == 0;
+    }
+
     public String getCountLiteral() {
         int count = getCount();
-        if (count == 0)
+        if (isFixed())
             return "FIXED";
         else if (count > 0)
             return String.format("%sVAR", new String(new char[count]).replace("\0", "L"));

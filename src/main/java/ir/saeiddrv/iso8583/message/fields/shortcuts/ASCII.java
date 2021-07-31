@@ -1,24 +1,32 @@
 package ir.saeiddrv.iso8583.message.fields.shortcuts;
 
 import ir.saeiddrv.iso8583.message.fields.*;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.ASCIIContentInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.ASCIILengthInterpreter;
+import java.nio.charset.Charset;
 
 public class ASCII implements ShortcutField {
 
     private final LengthType lengthType;
     private final int maximumLength;
-    private final ContentType contentType;
     private final ContentPad contentPad;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
 
-    public ASCII(LengthType lengthType, int maximumLength, ContentType contentType, ContentPad contentPad) {
+    private ASCII(LengthType lengthType, int maximumLength, ContentPad contentPad) {
         this.lengthType = lengthType;
         this.maximumLength = maximumLength;
         this.contentPad = contentPad;
-        this.contentType = contentType;
+    }
+
+    public static ASCII create(LengthType lengthType, int maximumLength) {
+        return new ASCII(lengthType, maximumLength, ContentPad.NO_PADDING);
+    }
+
+    public static ASCII create(LengthType lengthType, int maximumLength, ContentPad contentPad) {
+        return new ASCII(lengthType, maximumLength, contentPad);
     }
 
     @Override
@@ -28,8 +36,14 @@ public class ASCII implements ShortcutField {
     }
 
     @Override
-    public ShortcutField setFormatter(FieldFormatter formatter) {
+    public ShortcutField setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
+        return this;
+    }
+
+    @Override
+    public ShortcutField setCharset(Charset charset) {
+        this.charset = charset;
         return this;
     }
 
@@ -40,17 +54,15 @@ public class ASCII implements ShortcutField {
             field = SingleField.createFixed(fieldNumber,
                     maximumLength,
                     new ASCIIContentInterpreter(),
-                    contentType,
                     contentPad);
         else
             field = SingleField.create(fieldNumber,
                     new ASCIILengthInterpreter(),
                     LengthValue.create(lengthType.getCount(), maximumLength),
                     new ASCIIContentInterpreter(),
-                    contentType,
                     contentPad);
-
-        field.setFormatter(formatter);
+        field.setCharset(charset);
+        field.setValueFormatter(formatter);
         field.setDescription(description);
         return field;
     }

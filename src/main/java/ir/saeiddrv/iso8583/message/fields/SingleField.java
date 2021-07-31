@@ -1,11 +1,12 @@
 package ir.saeiddrv.iso8583.message.fields;
 
 import ir.saeiddrv.iso8583.message.*;
-import ir.saeiddrv.iso8583.message.fields.formatters.FieldFormatter;
+import ir.saeiddrv.iso8583.message.fields.formatters.ValueFormatter;
 import ir.saeiddrv.iso8583.message.interpreters.base.ContentInterpreter;
 import ir.saeiddrv.iso8583.message.interpreters.base.LengthInterpreter;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackContentResult;
+import ir.saeiddrv.iso8583.message.unpacks.UnpackLengthResult;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Objects;
 
@@ -14,62 +15,55 @@ public class SingleField implements Field {
     private final int number;
     private final Length length;
     private final Content content;
-    private FieldFormatter formatter = null;
+    private Charset charset = null;
+    private ValueFormatter formatter = null;
     private String description = "UNDEFINED";
+
+    private SingleField(int number,
+                        LengthInterpreter lengthInterpreter,
+                        LengthValue lengthValue,
+                        ContentInterpreter contentInterpreter,
+                        ContentPad contentPad) {
+        this.number = number;
+        this.length = new Length(lengthValue, lengthInterpreter);
+        this.content = new Content(contentInterpreter, contentPad);
+    }
 
     public static SingleField createRaw(int number) {
         return  new SingleField(number,
                 null,
                 LengthValue.UNDEFINED,
                 null,
-                ContentType.RAW,
                 ContentPad.NO_PADDING);
     }
 
     public static SingleField createFixed(int number,
                                           int maximumLength,
                                           ContentInterpreter contentInterpreter,
-                                          ContentType contentType,
                                           ContentPad contentPad) {
         return  new SingleField(number,
                 null,
                 LengthValue.create(0, maximumLength),
                 Objects.requireNonNull(contentInterpreter,
-                        "ContentInterpreter of FIELD[" + number + "] must not be null"),
-                Objects.requireNonNull(contentType,
-                        "ContentType of FIELD[" + number + "] must not be null"),
+                        "'ContentInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(contentPad,
-                        "ContentPad of FIELD[" + number + "] must not be null"));
+                        "'ContentPad' of FIELD[" + number + "] cannot be set to null."));
     }
 
     public static SingleField create(int number,
                                      LengthInterpreter lengthInterpreter,
                                      LengthValue lengthValue,
                                      ContentInterpreter contentInterpreter,
-                                     ContentType contentType,
                                      ContentPad contentPad) {
         return  new SingleField(number,
                 Objects.requireNonNull(lengthInterpreter,
-                        "LengthInterpreter of FIELD[" + number + "] must not be null"),
+                        "'LengthInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(lengthValue,
-                        "LengthValue of FIELD[" + number + "] must not be null"),
+                        "'LengthValue' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(contentInterpreter,
-                        "ContentInterpreter of FIELD[" + number + "] must not be null"),
-                Objects.requireNonNull(contentType,
-                        "ContentType of FIELD[" + number + "] must not be null"),
+                        "'ContentInterpreter' of FIELD[" + number + "] cannot be set to null."),
                 Objects.requireNonNull(contentPad,
-                        "ContentPad of FIELD[" + number + "] must not be null"));
-    }
-
-    private SingleField(int number,
-                        LengthInterpreter lengthInterpreter,
-                        LengthValue lengthValue,
-                        ContentInterpreter contentInterpreter,
-                        ContentType contentType,
-                        ContentPad contentPad) {
-        this.number = number;
-        this.length = new Length(lengthValue, lengthInterpreter);
-        this.content = new Content(contentInterpreter, contentPad, contentType);
+                        "'ContentPad' of FIELD[" + number + "] cannot be set to null."));
     }
 
     public Length getLength() {
@@ -88,8 +82,8 @@ public class SingleField implements Field {
         content.setValue(value);
     }
 
-    public void setValue(String value, Charset charset) throws ISOMessageException {
-        content.setValueFromString(value, charset);
+    public void setValue(String value, Charset charset) {
+        content.setValue(value, charset);
     }
 
     @Override
@@ -103,13 +97,18 @@ public class SingleField implements Field {
     }
 
     @Override
-    public void setFormatter(FieldFormatter formatter) {
+    public void setCharset(Charset charset) {
+        if (this.charset == null) this.charset = charset;
+    }
+
+    @Override
+    public void setValueFormatter(ValueFormatter formatter) {
         this.formatter = formatter;
     }
 
     @Override
-    public String getFormatted() {
-        if (hasFormatter()) return formatter.getFormatted(number, getValue());
+    public String getValueFormatted() {
+        if (hasFormatter()) return formatter.getFormatted(number, getValueAsString());
         else return null;
     }
 
@@ -119,8 +118,13 @@ public class SingleField implements Field {
     }
 
     @Override
-    public String getValue() {
-        return content.getValueAsString();
+    public byte[] getValue() {
+        return content.getValue();
+    }
+
+    @Override
+    public String getValueAsString() {
+        return content.getValueAsString(charset);
     }
 
     @Override
@@ -134,33 +138,61 @@ public class SingleField implements Field {
     }
 
     @Override
-    public byte[] pack(Charset charset) throws IOException, ISOMessageException {
-        // FOR RAW FIELDS, EXACTLY THE DATA THAT THE USER HAS SET WILL BE RETURNED
-        if (content.isRAW())
-            return content.getValue().getValue();
+    public byte[] pack() throws ISO8583Exception {
+        try {
+            // PREPARE CONTENT VALUE
+            if (length.isFixed())
+                content.doPad(length.getMaximumValue());
 
-        // PREPARE CONTENT VALUE
-        if (length.isFixed())
-            content.doPad(length.getMaximumValue());
-
-        // START FIELD PACKING, CREATE PACK BUFFER
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-        if (length.hasInterpreter())
-            buffer.write(length.pack(number, content.getLength(), charset));
-
-        if (content.hasInterpreter())
+            // START FIELD PACKING, CREATE PACK BUFFER
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            buffer.write(length.pack(number, content.getValue().length, charset));
             buffer.write(content.pack(number, length.getValue(), charset));
-        else
-            buffer.write(content.getValue().getValue());
 
-        // FINISHED
-        return buffer.toByteArray();
+            // FINISHED
+            return buffer.toByteArray();
+
+        } catch (Exception exception) {
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
+    }
+
+    @Override
+    public int unpack(byte[] message, int offset) throws ISO8583Exception {
+        try {
+            // UNPACK LENGTH
+            int messageLength = 0;
+            if (length.isFixed()) {
+                messageLength = length.getMaximumValue();
+            } else if (length.hasInterpreter()) {
+                UnpackLengthResult unpackLength = length.unpack(message, offset, number, charset);
+                if (unpackLength != null) {
+                    messageLength = unpackLength.getValue();
+                    offset = unpackLength.getNextOffset();
+                }
+            }
+
+            // UNPACK CONTENT
+            UnpackContentResult unpackContent = content.unpack(message, offset, number, messageLength, charset);
+            setValue(unpackContent.getValue());
+
+            // FINISHED
+            return unpackContent.getNextOffset();
+
+        }  catch (Exception exception) {
+            exception.printStackTrace();
+            throw new ISO8583Exception("FIELD[%s]: %s", number, exception.getMessage());
+        }
     }
 
     @Override
     public String toString() {
-        return String.format("@SingleField[number: %s, value: %s, length: %s, content: %s, description: %s]",
-                number, hasFormatter() ? getFormatted() : getValue(), length, content, description);
+        return String.format("@SingleField[number: %s, value: %s, length: %s, content: %s, charset: %s, description: %s]",
+                number,
+                hasFormatter() ? getValueFormatted() : getValueAsString(),
+                length,
+                content,
+                charset.displayName(),
+                description);
     }
 }
